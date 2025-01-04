@@ -102,7 +102,7 @@ top -H -P (pid)      # 查看某个进程内部的所有线程的cpu使用
 
 ```bash
 - 线程cpu时间片用完
-- 垃圾回收：                 # STW
+- 垃圾回收              
 - 有更高优先级的线程需要运行
 - 线程自己调用了sleep，yield，wait，join，park，synchronized，lock等方法
 ```
