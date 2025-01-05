@@ -14,7 +14,7 @@
 - maven拉取jar包时，方便快捷规范
 
 # jar包之间依赖关系
-- 手动添加，数量庞大，彼此见存在错综复杂的依赖关系，人力不能手动解决，jar包间冲突
+- 手动添加，数量庞大，彼此间存在错综复杂的依赖关系，人力不能手动解决，jar包间冲突
 - 让maven来管理冲突
 ```
 
@@ -35,13 +35,13 @@
 
 ## 2. 介绍
 
-- Apache维护的，java开发的，为Java项目提供的工具。安装maven前必须先安装java
+- Apache，java开发，为Java项目提供的工具。安装maven前必须先安装java
 - Build Management:  上传到代码仓库的是java源代码，需要Maven进行代码拉取，清理原来class文件，重新compile，test，package，install，deploy
 - Dependencies Management:  jar包下载，jar包依赖，jar包冲突
 
 ### 2.1 下载
 
-- [官网下载](https://maven.apache.org/download.cgi)，目前最先版本用3.8.6
+- [官网下载](https://maven.apache.org/download.cgi)
 - Mac/Linux选用对应的tar.gz文件，windows选用对应的bin.zip文件
 - 核心配置文件： maven/conf/setting.xml
 
@@ -199,7 +199,6 @@ mvn clean install
 ## 4. 仓库
 
 - 存储资源，包含各种jar包
-- 搜索时，在本地repo中，通过groupId/artifactId/version逐层目录去查找
 
 ```bash
 # maven仓库会保存三类jar
@@ -431,14 +430,14 @@ under the License.
 
 ### 2.1 依赖传递
 
-- 自己本地的多个项目(不管是不是父子项目)可互相依赖
-- 依赖传递时候，必须install才可以(IDEA中不install时，编译不会出现问题，但运行时候就会出错。因此线上的必须先install)
+- 本地的多个项目(不管是不是父子项目)可互相依赖
+- 依赖传递时，必须install才可以(IDEA中不install时，编译不会出现问题，但运行时候就会出错。因此线上的必须先install)
 
 ![image-20221028093120625](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20221028093120625.png)
 
 ### 2.2 仅传递compile
 
-- A依赖B, B中不是compile的依赖不能传递到A
+- A依赖B, B中只传递compile的依赖到A
 - B打包的时候，只有compile的会进行打包，所以才能传递 
 
 ![image-20221028094213087](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20221028094213087.png)
@@ -468,12 +467,12 @@ under the License.
 
 #### a.最短路径
 
-- 路径优先：依赖中出现相同的资源，资源层级越深，优先级越低
+- 路径优先：依赖中出现相同的GAV，资源层级越深，优先级越低
 - 最终选择lombok2.0
 
 ![image-20221030195638273](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20221030195638273.png)
 
-#### b.路径相同，先声明优先
+#### b.路径相同，声明优先
 
 - 一个项目依赖其他几个项目，其他几个项目中都包含某个jar包，那么引入其他几个项目，先引用的生效
 
@@ -542,7 +541,7 @@ under the License.
 - 可以直接执行父工程的maven命令，父工程会自动根据项目模式，找到对应的其他子工程
 - 执行maven命令时，比如package，只需在父工程中进行，聚合项目会自动对该父工程下所有项目进行一键package(父项目是自己的)
 - 如果父项目是公司级别的其他项目，则该优点就失效了，只能进行版本控制
-- 版本锁定也可以通过DM引入其他的对应的DM来进行管理，优先级比parent
+- 版本锁定也可以通过DM引入其他的对应的DM来进行管理，优先级比parent高
 
 # 尽量使用parent类型引入pom
 - 这样可以使用到 properties
@@ -653,356 +652,6 @@ erick-customization.jar.original       # 去掉 .original, 就是maven默认的�
         <!--自定义打包后的名字: erick-customization.jar -->
         <finalName>erick-customization</finalName>
     </build>
-```
-
-
-
-# Nexus私服
-
-## 1. 安装
-
-- Nexus的运行需要Java环境，先在Linux上安装Java(3.52.0.01要求安装Java8环境)
-
-```bash
-# 上传
-put /Users/shuzhan/Desktop/nexus-3.52.0-01-unix.tar.gz /usr/local 
-tar -zxvf nexus-3.52.0-01-unix.tar.gz
-
-# 启动
-cd /usr/local/nexus-3.52.0-01/bin
-./nexus run       # 前台启动，能够实时查看日志，但是退出命令行就会终止
-./nexus start     # 后台启动(推荐)，但不能看到日志
-./nexus status    # 查看状态
-
-# 参数设置
-# 1. 参数一：内存: nexus-3.52.0-01/bin/nexus.vmoptions
-- nexus中默认是2g
-    # 修改前
-    -Xms2703m
-    -Xmx2703m
-    -XX:MaxDirectMemorySize=2703m
-
-    # 修改后
-    -Xms528m
-    -Xmx528m
-    -XX:MaxDirectMemorySize=1024m
-    
-# 2. 参数二：浏览器端口：/nexus-3.52.0-01/etc/nexus-default.properties
-- 默认端口： 8081
-- application-port=8081
-
-# error:  Detected execution as "root" user.  This is NOT recommended!
-# 需要去/bin/nexus中修改配置,
-- vi环境下可以使用/run_as_root搜索
-- run_as_root=true   改为  run_as_root=false
-```
-
-## 2. 访问
-
-```bash
-# 1. 访问url
-- http://60.205.229.31:8081/
-
-# 2. 默认用户名和密码， 可以进行密码修改
-- user：     admin
-- password： 根据页面提示，在对应的linux的目录中去找password
-# Disable anonymous access： # 选择禁用匿名访问
-```
-
-### 2.1 添加用户
-
-- 添加一个用户： user:erick     password:19920507, 赋予admin权限
-
-![image-20230424182949968](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20230424182949968.png)
-
-## 3. 仓库类型
-
-- 拉取的jar包会保存在maven-central和maven-public中，我们项目中配置public的mirror即可
-
-```bash
-# maven-central
-- Nexus对Maven中央仓库的代理，默认是取中央仓库拉的
-- 设置镜像仓库，设置成阿里云的
-
-# maven-public
-- Nexus默认创建的，供开发下载使用的仓库
-- 实际下载的jar包就会存在这里
-
-# maven-release
-- Nexus默认创建，供开发部署自己的jar，要求版本以release结尾
-
-# maven-snapshots
-- Nexus默认创建，供开发部署自己的jar，要求版本以snapshots结尾
-
-# proxy
-- 某个远程仓库的代理
-
-# group
-- 通过Nexus获取的第三方jar包
-
-# hosted
-- 本团队开发人员部署到Nexus的jar包
-```
-
-![image-20230424174044569](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20230424174044569.png)
-
-![image-20230424180729155](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20230424180729155.png)
-
-![image-20230424182322668](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20230424182322668.png)
-
-## 4. 公共jar包-本地拉取配置
-
-- 配置setting.xml文件拉去公共的jar包
-- 去对应的mirror拉代码时候，根据url找到对应的私服仓库，根据id找到对应的username和password来进行权限认证访问
-
-```xml
-  <servers>
-    <server>
-      <!--server的ID必须和对应的私服的mirror的ID相同-->
-      <id>erick-nexus</id>
-      <username>erick</username>
-      <password>19920507</password>
-    </server>
-  </servers>
-
-  <mirrors>
-    <!--自己搭建的私服的repo-->
-    <mirror>
-      <id>erick-nexus</id>
-      <name>erick-nexus</name>
-      <url>http://60.205.229.31:8081/repository/maven-public/</url>
-      <mirrorOf>central</mirrorOf>
-    </mirror>
-  </mirrors>
-```
-
-## 5. 项目上传发布
-
-- 通过IDEA来执行maven deploy
-
-### member
-
-- 如果配置了maven-public的member，则member添加jar包时，同时也会在**maven-public**存一份。如果取消了maven-public的member，则会立刻删除掉对应的jar包
-
-![image-20230424221731984](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20230424221731984.png)
-
-### pom.xml
-
-![image-20230424225135087](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20230424225135087.png)
-
-### 5.1  SNAPSHOTS
-
-- pom中对应项目的version只要包含 SNAPSHOT都会发布到maven-snapshots仓库
-- SNAPSHOTS发布时候，会自动加上时间戳作为备份
-
-```bash
-# Deployment policy: Allow redeploy
-- 同一个jar包相同版本可以部署多次
-```
-
-![image-20230424214231603](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20230424214231603.png)
-
-### 5.2 RELEASES
-
-- version如果不包含SNAPSHOT字符，都会自动发布到maven-releases仓库
-- 建议release的jar包带上RELEASE，比如1.0.0-RELEASE
-
-```bash
-# Deploy Policy: Disable redeploy,  不允许deploy相同版本的jar包
-status: 400 Repository does not allow updating assets: maven-releases
-```
-
-![image-20230424223749793](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20230424223749793.png)
-
-
-
-## 6. 项目拉取
-
-### 6.1 maven-public
-
-- 如果SNAPSHOT和RELEASE的jar包存在于maven-public，则直接可以去maven-public拉
-
-#### setting.xml
-
-```bash
-# 在服务器上的maven和本地的maven配置，作为全局配置，项目pom.xml可以不加任何配置上面配置的已经生效
-- 缺点： 强制配置setting.xml
-- 优点： 较为安全，不会出现user和password暴露在pom.xml中
-```
-
-```xml
-<servers>
-    <server>
-      <!--server的ID必须和对应的私服的mirror的ID相同-->
-      <id>erick-nexus</id>
-      <username>erick</username>
-      <password>19920507</password>
-    </server>
-  </servers>
-
-  <mirrors>
-    <!--自己搭建的私服的repo-->
-    <mirror>
-      <id>erick-nexus</id>
-      <name>erick-nexus</name>
-      <url>http://60.205.229.31:8081/repository/maven-public/</url>
-      <mirrorOf>central</mirrorOf>
-    </mirror>
-  </mirrors>
-```
-
-```bash
-# 引用时用原来项目的版本号，不能通过时间戳对应的版本来拉
-- 会自动拉取maven-public中最新时间戳的jar包
-- 如果jar包更新了，本地重新reimport即可，不用删除本地repo的包
-
-        <dependency>
-            <groupId>com.erick.daydreamer</groupId>
-            <artifactId>erick-haha</artifactId>
-            <version>1.0-SNAPSHOT</version>
-        </dependency>
-```
-
-### 6.2 maven-xxx
-
-- 如果maven-public没有对应的SNAPSHOT和RELEASE的member，则不能从maven-public拉，只能从对应的仓库去找
-
-**setting.xml**
-
-```xml
-   <?xml version="1.0" encoding="UTF-8"?>
-
-<!--
-Licensed to the Apache Software Foundation (ASF) under one
-or more contributor license agreements.  See the NOTICE file
-distributed with this work for additional information
-regarding copyright ownership.  The ASF licenses this file
-to you under the Apache License, Version 2.0 (the
-"License"); you may not use this file except in compliance
-with the License.  You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing,
-software distributed under the License is distributed on an
-"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-KIND, either express or implied.  See the License for the
-specific language governing permissions and limitations
-under the License.
--->
-
-<!--
- | This is the configuration file for Maven. It can be specified at two levels:
- |
- |  1. User Level. This settings.xml file provides configuration for a single user,
- |                 and is normally provided in ${user.home}/.m2/settings.xml.
- |
- |                 NOTE: This location can be overridden with the CLI option:
- |
- |                 -s /path/to/user/settings.xml
- |
- |  2. Global Level. This settings.xml file provides configuration for all Maven
- |                 users on a machine (assuming they're all using the same Maven
- |                 installation). It's normally provided in
- |                 ${maven.conf}/settings.xml.
- |
- |                 NOTE: This location can be overridden with the CLI option:
- |
- |                 -gs /path/to/global/settings.xml
- |
- | The sections in this sample file are intended to give you a running start at
- | getting the most out of your Maven installation. Where appropriate, the default
- | values (values used when the setting is not specified) are provided.
- |
- |-->
-<settings xmlns="http://maven.apache.org/SETTINGS/1.2.0"
-          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.2.0 https://maven.apache.org/xsd/settings-1.2.0.xsd">
-
-    <localRepository>/Users/shuzhan/Documents/repo</localRepository>
-
-    <pluginGroups></pluginGroups>
-
-    <proxies></proxies>
-
-    <mirrors>
-        <!--自己搭建的私服的repo，可以配置多个私服-->
-        <mirror>
-            <id>erick-nexus</id>
-            <name>erick-nexus</name>
-            <url>http://60.205.229.31:8081/repository/maven-public/</url>
-            <mirrorOf>central</mirrorOf>
-        </mirror>
-    </mirrors>
-
-    <servers>
-        <server>
-            <!--server的ID必须和对应的私服的mirror的ID相同-->
-            <id>erick-nexus</id>
-            <username>erick</username>
-            <password>19920507</password>
-        </server>
-        <server>
-            <!--snapshot的server-->
-            <id>erick-nexus-public</id>
-            <username>erick</username>
-            <password>19920507</password>
-        </server>
-
-        <server>
-            <!--snapshot的server-->
-            <id>erick-nexus-snapshot</id>
-            <username>erick</username>
-            <password>19920507</password>
-        </server>
-
-        <server>
-            <!--release的server-->
-            <id>erick-nexus-release</id>
-            <username>erick</username>
-            <password>19920507</password>
-        </server>
-    </servers>
-
-    <profiles>
-        <profile>
-            <!--id随意,后面要通过该id激活该profile-->
-            <id>erick-repo</id>
-            <!--有几个repo，就有几个repo的server验证信息
-               1. repo的id不能重复
-               2. 拉的时候遍历几个repo去拉-->
-            <repositories>
-                <!--配置snapshots的拉取权限-->
-                <repository>
-                    <!--id要和对应的server对应-->
-                    <id>erick-nexus-snapshot</id>
-                    <name>erick-snapshot-repo</name>
-                    <url>http://60.205.229.31:8081/repository/maven-snapshots/</url>
-                    <snapshots>
-                        <enabled>true</enabled>
-                        <updatePolicy>always</updatePolicy>
-                    </snapshots>
-                </repository>
-                <!--配置release的拉取权限-->
-                <repository>
-                    <!--id要和对应的server对应-->
-                    <id>erick-nexus-release</id>
-                    <name>erick-release-repo</name>
-                    <url>http://60.205.229.31:8081/repository/maven-releases/</url>
-                    <releases>
-                        <enabled>true</enabled>
-                    </releases>
-                </repository>
-            </repositories>
-        </profile>
-    </profiles>
-
-    <activeProfiles>
-        <!--激活对应的profile-->
-        <activeProfile>erick-repo</activeProfile>
-    </activeProfiles>
-
-</settings>
 ```
 
 # 版本信息

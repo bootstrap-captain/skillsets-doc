@@ -401,7 +401,7 @@ BITCOUNT key [start end]
 
 ## 1. Jedis
 
-- 以Redis指令命名作为方法名称，学习成本低，简单实用
+- 以Redis指令命名作为方法名称
 - Jedis实例是线程不安全的，多线程环境下需要基于连接池使用
 - [Jedis github](https://github.com/redis/jedis)
 
