@@ -14,10 +14,7 @@ sudo yum install -y yum-utils
 # 2. 查看版本
 docker -v
 docker version
-
 ```
-
-
 
 # 安装JDK17/8
 
