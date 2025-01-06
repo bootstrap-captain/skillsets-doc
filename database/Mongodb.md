@@ -151,10 +151,7 @@ db.student.createIndex({name:1,hobby:-1});     # 多个索引
 db.student.dropIndex({name:1});    # 具体指定索引类型
 db.student.dropIndex('name_1');    # 根据索引名称
 db.student.dropIndexes();          # 删除所有自定义的index，不会删除_id
-
 ```
-
-
 
 # Java
 

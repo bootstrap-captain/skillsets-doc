@@ -1,86 +1,21 @@
-# Jenkins安装
+# Maven Item 构建
 
-- Jenkins是一个war包，因此服务器需要先安装JDK
+## Maven集成
 
-- Jenkins需要用Maven进行打包，所以服务器需要先下载Maven
-
-- Jenkins需要用到git拉代码，因此需要先下载Git
-
-- CICD: continuous integration, continuous deploy 
-
-## 1.  下载
-
-- [官网war包](https://www.jenkins.io/download/)
-- version：2.361.2
-
-```bash
-# 1. 安装环境
-- Centos 7.6
-
-# 2. 将对应war包上传到Linux,
-put /Users/shuzhan/Desktop/jenkins.war /usr/local
-```
-
-## 2. 启动
-
-```bash
-# 3. 后台启动Jenkins
-#  & 表示后台启动     nohup 是centos的后台启动的指令
-# >jenkins.log： 在命令执行的目录下，生成jenkins.log文件，并将启动日志写入
-# >  >> 文件写入流的两种方式    > 覆盖              >> 追加
-#  2>&1     2表示错误输出，1表示标准输出      错误输出和标准输出都写进来
-# 如果不写输出日志，则命令会卡住，按回车后会将日志默认写入到nohup.log中
-nohup java -jar jenkins.war --httpPort=8081 >jenkins.log 2>&1 &
-
-# jps查看是否启动成功
-jps
-```
-
-
-
-```bash
-#  如果出现下面错误，是因为缺少字体的原因
-yum install fontconfig
-fc-cache --force
-```
-
-![image-20220901014435411](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20220901014435411.png)
-
-## 3. 访问
-
-```bash
-# 通过浏览器访问, 第一次进入需要admin的密码
-http://119.23.242.170:8081/
-
-# 根据红字提示查看密码
-# 输入密码，等待响应，第一次加载时间会比较慢
-
-# 其他安装
-- 按照提示安装指定插件
-- 创建admin用户
-```
-
-![image-20220901015413967](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20220901015413967.png)
-
-## 4. Maven集成
-
-### 4.1  Maven Integration插件
+### Maven Integration插件
 
 - 项目通过识别pom文件，用maven来打包成jar包
 
 ![image-20220831224136831](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20220831224136831.png)
 
-### 4.2 配置Maven路径
+### 配置Maven路径
 
 - Dashboard---Global Tool Configuration
 - 手动配置Maven路径,  Maven为本地服务器安装的Maven
-- 如果识别不到，系统会自动提示
 
 ![image-20220901030331370](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20220901030331370.png)
 
-# Maven Item 构建
-
-## 1. 项目构建
+## 项目构建
 
 -  构建对应的Maven项目--- New Item
 
@@ -95,13 +30,13 @@ http://119.23.242.170:8081/
 /root/.jenkins/jobs/code example
 ```
 
-## 2. 构建信息
+## 构建信息
 
-### 2.1 General
+### General
 
 ![image-20221022130921999](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20221022130921999.png)
 
-### 2.2 Source Code
+### Source Code
 
 #### 开源无需密钥
 
@@ -142,13 +77,13 @@ ssh-keygen -t rsa
 
 ![image-20221025164945057](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20221025164945057.png)
 
-### 2.3 Pre Steps
+### Pre Steps
 
 - 在构建jar包前可以做的工作
 
 ![image-20220831230008051](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20220831230008051.png)
 
-### 2.4 Build
+### Build
 
 - 需要在Jenkins服务器上安装Maven, 从而使Jenkins拉取的代码能够通过Maven解析
 - 注意对应pom.xml的路径: 对应项目所需要识别的路径
@@ -157,13 +92,13 @@ ssh-keygen -t rsa
 
 ![image-20220831230534172](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20220831230534172.png)
 
-### 2.5  Post Steps
+### Post Steps
 
 - 可以把构建完成后的jar包，发送到对应的服务器上，并运行
 
 ![image-20220831233324117](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20220831233324117.png)
 
-### 2.6 打Jar包
+### 打Jar包
 
 - 会将项目从git拉取过来，然后用maven进行编译，同时下载对应的依赖，就类似于本地用maven编译一样，目录结构也是和本地类似
 
@@ -186,19 +121,17 @@ ssh-keygen -t rsa
 ERROR: No such file /root/.jenkins/workspace/code-example pom.xml
 ```
 
-
-
-# Jenkins发布Jar包
+# 发布Jar包
 
 - 准备一台阿里云服务器作为测试环境安装jdk17
 
-## 1.  SSH发布Jar包
+## SSH发布Jar包
 
-### 1.1 Publish Over SSH插件
+### Publish Over SSH插件
 
 - 在Jenkins上安装Publish Over SSH， 从而可以通过SSH将jar包发送到测试环境服务器上
 
-### 1.2 新建SSH-Server
+### 新建SSH-Server
 
 - 可以通过用户名密码来链接，也可以通过其他证书类的链接
 - 新建后，可以通过test connection来验证链接是否成功
@@ -206,7 +139,7 @@ ERROR: No such file /root/.jenkins/workspace/code-example pom.xml
 
 ![image-20220901170612004](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20220901170612004.png)
 
-### 1.3 Item配置-Post Steps
+### Item配置-Post Steps
 
 - 打包完成后的后置操作，通过SSH发送文件到指定服务器
 
@@ -236,9 +169,9 @@ code-example/target
 
 ![image-20220904113014050](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20220904113014050.png)
 
-## 2. Jar包运行
+## Jar包运行
 
-### 2.1 测试服务器运行
+### 测试服务器运行
 
 ```bash
 # 1.直接启动， 但是关闭terminal或者 ctrl+c就会终止进程
@@ -261,7 +194,7 @@ nohup: ignoring input and appending output to 'nohup.out'
 kill -9 3538
 ```
 
-### 2.2 Jenkins中执行
+### Jenkins中执行
 
 ```bash
 # 如果通过下面指令在 Jenkins中执行
@@ -276,11 +209,11 @@ nohup java -jar /root/erick/*.jar  >code-example.log 2>&1 &
 nohup java -jar /root/erick/*.jar  >code-example.log 2>&1 &
 ```
 
-## ![image-20221023140018841](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20221023140018841.png)3. 运行前清理
+## ![image-20221023140018841](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20221023140018841.png)运行前清理
 
 - 通过shell脚本启动的服务，要先杀死掉之前的应用，再启动新的应用，否则就会引发端口冲突问题
 
-### 3.1 控制台查看进程
+###  控制台查看进程
 
 ```bash
 # 1.查看java进程
@@ -304,7 +237,7 @@ ps -ef | grep code-example | grep 'java -jar' | awk '{printf $2}'
 3659[root@dayDreamer erick]#
 ```
 
-### 3.2 Shell脚本入门
+### Shell脚本入门
 
 ```bash
 # 在/root/erick下创建 clear.sh
@@ -343,7 +276,7 @@ if [ -z $pid ];
 fi
 ```
 
-### 3.3 Jenkins触发-Pre Steps
+### Jenkins触发-Pre Steps
 
 - 在构建Jar包之前，传输文件之前，先去执行的操作
 - 也是通过Publish Over SSH插件来完成
@@ -356,9 +289,9 @@ cd /root/erick                # 需要先进入到这个目录，才能删除对
 
 ![image-20221023141556065](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20221023141556065.png)
 
-# Jenkins Pipeline
+# Pipeline
 
-## 1. 简介
+## 简介
 
 - 使用Pipeline， 可以将上面所有的UI操作，转换为代码，就想docker的dockerfile一样
 - Jenkinsfile一般作为源代码提交到git仓库
@@ -372,13 +305,13 @@ cd /root/erick                # 需要先进入到这个目录，才能删除对
 - steps： 阶段内的每一步，可执行命令
 ```
 
-## 2. 基本构建
+## 基本构建
 
-### 2.1 Pipeline
+### Pipeline
 
 ![image-20220904142742980](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20220904142742980.png)
 
-### 2.2 脚本直接构建
+### 脚本直接构建
 
 - 可以通过直接在consule里面写pipeline的脚本
 
@@ -414,7 +347,7 @@ pipeline {
 
 ![image-20220904144026077](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20220904144026077.png)
 
-### 2.3. Blue Ocean
+### Blue Ocean
 
 - 提供了一个更加漂亮的Pipeline构建的Web界面
 - 安装Blue Ocean 插件
@@ -423,9 +356,9 @@ pipeline {
 
 ![image-20220904144441227](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20220904144441227.png)
 
-## 3. Pipeline脚本构建
+## Pipeline脚本构建
 
-### 3.1 代码生成器
+### 代码生成器
 
 - 下拉选项，是根据装的插件来决定的， 使用Pipeline Syntax来快速生成代码
 
@@ -433,7 +366,7 @@ pipeline {
 
 ![image-20220904144911431](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20220904144911431.png)
 
-### 3.2 代码拉取
+### 代码拉取
 
 - 利用代码生成器生成
 
@@ -444,7 +377,7 @@ git branch: 'main', url: 'https://gitee.com/daydreamer9451/nike-shoe.git'
 
 ![image-20220904145125543](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20220904145125543.png)
 
-### 3.3  Maven构建
+### Maven构建
 
 ```bash
 pipeline {
@@ -481,14 +414,12 @@ pipeline {
   因此要去执行的时候，必须先进入到cd code-example找到对应的pom文件
 ```
 
-
-
-### 3.4 SSH-Pubish
+### SSH-Pubish
 
 - 发送测试服务器，启动服务，前期清理工作
 - 根据之前发送jar包的方式，在web界面操作，通过代码生成器帮我们来做
 
-### 3.5 最终脚本
+### 最终脚本
 
 ```bash
 
@@ -543,7 +474,7 @@ nohup java -jar /root/erick/*.jar  >code-example.log 2>&1 &''', execTimeout: 120
 
 ![image-20221023145403519](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20221023145403519.png)
 
-## 4. Pipeline-Jenkinsfile构建
+## Pipeline-Jenkinsfile构建
 
 - 在代码中创建Jenkinsfile文件，上面的脚本都写在里面
 
@@ -551,7 +482,7 @@ nohup java -jar /root/erick/*.jar  >code-example.log 2>&1 &''', execTimeout: 120
 
 ![image-20221023150430142](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20221023150430142.png)
 
-# Jenkins发布Docker
+# 发布Docker
 
 ## 1. DEV-环境
 

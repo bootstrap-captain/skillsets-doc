@@ -1,6 +1,6 @@
 # File 类
 
-## 1. 创建文件
+## 创建
 
 -  File 包含文件( File)和目录(Directory)
 
@@ -71,7 +71,7 @@ public class Test01 {
 }
 ```
 
-## 2. 查看文件信息
+## 查看
 
 ```bash
 public String getName();
@@ -82,7 +82,7 @@ public boolean isFile();
 public boolean isDirectory();
 ```
 
-## 3. 删除操作
+## 删除
 
 ```bash
 public boolean exists();

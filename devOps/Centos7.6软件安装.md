@@ -916,6 +916,65 @@ under the License.
 </settings>
 ```
 
+# Jenkins安装
+
+- Jenkins是一个war包，因此服务器需要先安装JDK
+
+- Jenkins需要用Maven进行打包，所以服务器需要先下载Maven
+
+- Jenkins需要用到git拉代码，因此需要先下载Git
+
+- CICD: continuous integration, continuous deploy 
+
+## 1.  下载
+
+- [官网war包](https://www.jenkins.io/download/)
+- version：2.361.2
+
+```bash
+# 将对应war包上传到Linux,
+put /Users/shuzhan/Desktop/jenkins.war /usr/local
+```
+
+## 2. 启动
+
+```bash
+# 后台启动Jenkins
+#  & 表示后台启动     nohup 是centos的后台启动的指令
+# >jenkins.log： 在命令执行的目录下，生成jenkins.log文件，并将启动日志写入
+# >  >> 文件写入流的两种方式    > 覆盖              >> 追加
+#  2>&1     2表示错误输出，1表示标准输出      错误输出和标准输出都写进来
+# 如果不写输出日志，则命令会卡住，按回车后会将日志默认写入到nohup.log中
+nohup java -jar jenkins.war --httpPort=8081 >jenkins.log 2>&1 &
+
+# jps查看是否启动成功
+jps
+```
+
+```bash
+#  如果出现下面错误，是因为缺少字体的原因
+yum install fontconfig
+fc-cache --force
+```
+
+![image-20220901014435411](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20220901014435411.png)
+
+## 3. 访问
+
+```bash
+# 通过浏览器访问, 第一次进入需要admin的密码
+http://119.23.242.170:8081/
+
+# 根据红字提示查看密码
+# 输入密码，等待响应，第一次加载时间会比较慢
+
+# 其他安装
+- 按照提示安装指定插件
+- 创建admin用户
+```
+
+![image-20220901015413967](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20220901015413967.png)
+
 #  Git安装
 
 ```bash

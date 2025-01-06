@@ -8,8 +8,6 @@ ipconfig getifaddr en0
 
 ## 1. 服务器相同IP，本地连接
 
-
-
 ![image-20240316184814587](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20240316184814587.png)
 
 ```bash
