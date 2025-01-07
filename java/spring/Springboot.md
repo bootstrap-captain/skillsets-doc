@@ -752,7 +752,6 @@ public @interface SpringBootConfiguration {
     )
     boolean proxyBeanMethods() default true;
 }
-
 ```
 
 ### 1.2 @ComponentScan

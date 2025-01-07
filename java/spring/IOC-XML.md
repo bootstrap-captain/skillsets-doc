@@ -103,12 +103,12 @@ public class Test01 {
 
 ### 2.3 二者比较
 
-| BeanFactory             | ApplicationContext                                         |
-| ----------------------- | ---------------------------------------------------------- |
-| spring的bean工厂        | spring的容器                                               |
-| 功能较少                | 扩展了监听，国际化等功能                                   |
-| 早期接口，底层接口      | 后期接口，继承并组合BeanFactory                            |
-| 首次调用getBean时才创建 | 配置文件加载后，将所有bean都初始化好(可以通过构造方法判断) |
+| BeanFactory             | ApplicationContext                   |
+| ----------------------- | ------------------------------------ |
+| spring的bean工厂        | spring的容器                         |
+| 功能较少                | 扩展了监听，国际化等功能             |
+| 早期接口，底层接口      | 后期接口，继承并组合BeanFactory      |
+| 首次调用getBean时才创建 | 配置文件加载后，将所有bean都初始化好 |
 
 ![image-20231215102418471](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20231215102418471.png)
 

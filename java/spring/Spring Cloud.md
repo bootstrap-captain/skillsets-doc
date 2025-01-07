@@ -1273,7 +1273,5 @@ public class OrderApplication {
 
 ![image-20220827112839006](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20220827112839006.png)
 
-
-
 # Sleuth链路监控
 

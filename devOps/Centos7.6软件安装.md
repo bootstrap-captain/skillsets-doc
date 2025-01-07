@@ -238,18 +238,18 @@ jps
 
 ## 1. 单机版
 
-- [官方安装文档](https://www.mongodb.com/docs/manual/)
+- [官方安装文档](https://www.mongodb.com/try/download/community)
 
-![image-20240518110657599](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20240518110657599.png)
+![image-20250107195332229](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250107195332229.png)
 
 ### 1.1 上传文件
 
 ```bash
 # 上传
-put /Users/shuzhan/Desktop/mongodb-linux-x86_64-rhel70-7.0.9.tgz /opt
+put /Users/shuzhan/Desktop/mongodb-linux-x86_64-rhel70-7.0.16.tgz /opt
 
 # 解压
-tar -xvf mongodb-linux-x86_64-rhel70-7.0.9.tgz 
+tar -xvf mongodb-linux-x86_64-rhel70-7.0.16.tgz
 
 # 目录结构
 -rw-r--r-- 1 root root  30608 Apr 24 23:50 LICENSE-Community.txt
@@ -260,7 +260,7 @@ drwxr-xr-x 2 root root   4096 May 18 11:10 bin
 
 
 # 移动解压后的文件夹到指定目录
-mv mongodb-linux-x86_64-rhel70-7.0.9 /usr/local/mongodb
+mv mongodb-linux-x86_64-rhel70-7.0.16 /usr/local/mongodb
 
 # 新建几个目录，用来存储日志和数据
 cd /usr/local/mongodb
@@ -313,6 +313,7 @@ ps -ef | grep mongod
 
 - 默认的mongodb启动后，是不需要安全认证的
 - mongodb提供了基于用户的权限认证
+- 通过datagrip登陆进去
 
 ```bash
 use admin;                 #  切换到admin

@@ -157,6 +157,13 @@ db.student.dropIndexes();          # 删除所有自定义的index，不会删�
 
 - springdata
 
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-data-mongodb</artifactId>
+</dependency>
+```
+
 ```yaml
 spring:
   data:
@@ -164,8 +171,196 @@ spring:
       host: 39.105.210.163
       port: 27017
       database: erickdb
-      username: erickroot
-      password: '123456'               # 如果密码纯数字，则必须加''
-      authentication-database: admin   # 必须配置，不然就认证失败
+```
+
+## 插入
+
+
+
+# 查询
+
+## 聚合查询
+
+### count
+
+#### root-level
+
+- country为一级字段，根据country进行分组后统计count
+
+![image-20250107210811478](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250107210811478.png)
+
+```java
+package com.citi.erick.service;
+
+import com.citi.erick.entity.CountryCountResult;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationResults;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+@Slf4j
+public class QueryService {
+
+    @Autowired
+    private MongoTemplate mongoTemplate;
+
+    private String collectionName = "people";
+
+    public List<CountryCountResult> aggregateByCountry() {
+        Aggregation agg = Aggregation.newAggregation(
+                /*1.添加过滤条件*/
+                Aggregation.match(Criteria.where("email").exists(true)),
+                /*2. 对country进行group后，统计count为totalCount*/
+                Aggregation.group("country").count().as("totalCount")
+        );
+
+        /*映射的类型*/
+        AggregationResults<CountryCountResult> aggregateResult = mongoTemplate.aggregate(agg, collectionName, CountryCountResult.class);
+        List<CountryCountResult> results = aggregateResult.getMappedResults();
+        return results;
+    }
+}
+```
+
+```java
+package com.citi.erick.entity;
+
+import lombok.Data;
+import org.springframework.data.mongodb.core.mapping.Field;
+
+@Data
+public class CountryCountResult {
+    /*原始的字段是_id，需要将其映射到country上*/
+    @Field("_id")
+    private String country;
+    private long totalCount;
+}
+```
+
+```json
+[
+  {
+    "country": "美国",
+    "totalCount": 1
+  },
+  {
+    "country": "中国",
+    "totalCount": 2
+  },
+  {
+    "country": "非洲",
+    "totalCount": 1
+  },
+  {
+    "country": "韩国",
+    "totalCount": 1
+  }
+]
+```
+
+#### second-level
+
+- 某个字段为二级字段，根据二级字段的某个值
+
+![image-20250107220944566](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250107220944566.png)
+
+```java
+package com.citi.erick.service;
+
+import com.citi.erick.entity.CountryCountResult;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationResults;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+@Slf4j
+public class AggregateService {
+
+    @Autowired
+    private MongoTemplate mongoTemplate;
+
+    private String collectionName = "student";
+
+    public List<CountryCountResult> aggregateByCountry() {
+        Aggregation agg = Aggregation.newAggregation(
+                /*1.添加过滤条件: 二级字段*/
+                Aggregation.match(Criteria.where("order.email").exists(true)),
+                /*2. 二级字段: 对country进行group后，统计count为totalCount*/
+                Aggregation.group("order.country").count().as("totalCount")
+        );
+
+        /*映射的类型*/
+        AggregationResults<CountryCountResult> aggregateResult = mongoTemplate.aggregate(agg, collectionName, CountryCountResult.class);
+        List<CountryCountResult> results = aggregateResult.getMappedResults();
+        return results;
+    }
+}
+```
+
+#### unwind
+
+- 是MongoTemplate中聚合管道的一个步骤，将文档中的一个数组字段拆分为多个文档，并将原始文档的其他字段复制到新文档中
+
+![image-20250107225730696](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250107225730696.png)
+
+```java
+package com.citi.erick.service;
+
+import com.citi.erick.entity.CountryCountResult;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationResults;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+public class UnwindService {
+    @Autowired
+    private MongoTemplate mongoTemplate;
+
+    private String collectionName = "phone";
+
+    public List<CountryCountResult> aggregateByCountry() {
+        Aggregation agg = Aggregation.newAggregation(
+                /*1.拆分数组，并将文档其他的值复制到新文档上*/
+                Aggregation.unwind("products"),
+
+                /*2. 按照一定规则匹配*/
+                Aggregation.match(Criteria.where("products.country").is("中国")),
+
+                /*3. 进行统计*/
+                Aggregation.group("products.country").count().as("totalCount")
+        );
+
+        /*映射的类型*/
+        AggregationResults<CountryCountResult> aggregateResult = mongoTemplate.aggregate(agg, collectionName, CountryCountResult.class);
+        List<CountryCountResult> results = aggregateResult.getMappedResults();
+        return results;
+    }
+}
+```
+
+```json
+[
+  {
+    "country": "中国",
+    "totalCount": 4
+  }
+]
 ```
 
