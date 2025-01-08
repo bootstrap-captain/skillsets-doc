@@ -179,6 +179,49 @@ spring:
 
 # 查询
 
+## 字段类型为数组
+
+- 数组中的数据，只要有其中一条匹配当前条件，就返回当前文档
+
+![image-20250108124121296](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250108124121296.png)
+
+```java
+package com.citi.erick.service;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+@Slf4j
+public class QueryArrayService {
+    @Autowired
+    private MongoTemplate mongoTemplate;
+
+    private String collectionName = "replay";
+
+    public void queryArray() {
+        Query query = new Query();
+        // action: 一级字段
+        query.addCriteria(Criteria.where("action").elemMatch(
+                // comment：数组中的二级字段
+                Criteria.where("comment").is("拒绝")
+        ));
+
+        List<Object> results = mongoTemplate.find(query, Object.class, collectionName);
+        log.info("results={}", results);
+        log.info("size={}", results.size());
+    }
+}
+```
+
+
+
 ## 聚合查询
 
 ### count
