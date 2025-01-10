@@ -1,15 +1,16 @@
 # 简介
 
 - [Docker官网](https://www.docker.com/)
+- [Docker Hub官网：仓库](https://hub.docker.com/)
 
-## 1. 基本介绍
+## 基本介绍
 
 ### Before
 
 ```bash
 # 1. 环境不一致
 - 一个项目，需要部署在不同的服务器上，每个服务器得单独安装对应的jdk，mysql等
-- 多个服务器如果安装的软件存在不一致，可能出现异常问题
+- 多个服务器如果安装的软件版本不一致，可能出现异常问题
 
 # 2. 安装麻烦
 - 集群安装比较麻烦
@@ -22,13 +23,14 @@
 
 ### After
 
-- 将项目源码，项目所需的其他软件，打包统一称为一个docker-image，然后将该image在装有docker的linux运行
+- 将项目源码，项目所需的其他软件，打包统一称为一个docker-image，然后将该image放在装有docker的linux运行
+- 一次镜像，处处运行
 
 ![image-20241125162802740](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20241125162802740.png)
 
-## 2. 三要素
+## 三要素
 
- - docker host：Linux 服务器等
+ - docker host：Linux 服务器
 
 ```bash
 # docker image
@@ -44,6 +46,230 @@
      - 包含root权限，进程空间，用户空间，网络空间等
      - 运行在其中的应用程序，如redis
 ```
+
+## 安装-Docker Engine
+
+- 不是一个通用的容器工具，依赖于已经存在并且运行的Linux内核环境
+- Docker是在已经运行的Linux下制造了一个隔离的文件环境，因此它执行的效率及户等同于所部署的Linux主机
+- 在CentOS 7.6上安装
+
+### 卸载
+
+```bash
+sudo yum remove docker \
+                  docker-client \
+                  docker-client-latest \
+                  docker-common \
+                  docker-latest \
+                  docker-latest-logrotate \
+                  docker-logrotate \
+                  docker-engine
+```
+
+### 前提安装
+
+```bash
+# 基本的包安装：linux通用的
+yum -y install gcc
+yum -y install gcc-c++
+
+# 安装yum-utils
+sudo yum install -y yum-utils
+
+# 设置稳定仓库
+yum-config-manager --add-repo http://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
+
+# 重建yum索引
+yum makecache fast
+```
+
+### docker engine
+
+```bash
+sudo yum -y install docker-ce docker-ce-cli containerd.io
+```
+
+### 启动
+
+```bash
+# 启动/停止/重启
+systemctl start docker
+systemctl stop docker
+systemctl restart docker
+systemctl status docker    # docker的状态
+systemctl enable docker    # 开机启动Docker
+
+# 查看版本
+docker -v
+docker version
+
+# docker里面的容器等信息
+docker info
+```
+
+### 镜像配置
+
+- docker镜像默认从海外拉取
+- 可以配置阿里云镜像作为仓库
+
+```bash
+# 登陆阿里云 --> 容器镜像服务 --> 镜像工具 --> 镜像加速器
+# 拷贝对应的镜像地址
+vim /etc/docker/daemon.json
+
+{
+  "registry-mirrors": ["https://xxxxxr.mirror.aliyuncs.com"]
+}
+
+# 重启docker
+# 测试
+docker run hello-world
+```
+
+## 镜像命令
+
+```bash
+# 1. 查看本地查看所有镜像
+docker images  
+
+REPOSITORY    TAG       IMAGE ID       CREATED       SIZE
+hello-world   latest    feb5d9fea6a5   3 years ago   13.3kB
+
+- a：   # 列出本地所有镜像(含历史映像层)
+- q：   # 只显示IMAGE ID
+docker images -a
+docker images -q    
+docker images -qa
+docker images -aq
+
+# 2. 所有容器及镜像信息
+docker system df
+
+TYPE            TOTAL     ACTIVE    SIZE      RECLAIMABLE
+Images          1         1         13.26kB   0B (0%)
+Containers      1         0         0B        0B
+Local Volumes   0         0         0B        0B
+Build Cache     0         0         0B        0B
+
+# 3. 拉取镜像，在镜像名后可以加标签，默认为latest，即为该软件的最新版本
+docker pull tomcat
+docker pull tomcat:7.0
+
+# 4. 删除软件镜像(IMAGE_ID),该镜像的所有实例都已经删除时,才可以删除镜像
+# 加上- f ，即使该image有对应的container，强制删除image
+docker rmi -f bd54813ab48c                        # rm images
+
+# 先获取所有的imageid，然后全部强制删除
+docker rmi -f $(docker images -qa)
+```
+
+## 容器命令
+
+### 后台启动
+
+- 后台启动的容器，为守护使容器
+
+```bash
+# 启动
+#   -d： 以后台模式打开一个容器，不打开命令终端
+#   -p： 端口映射 9001:9000,  左边=linux宿主机端口   右边=docker内部，该容器的端口
+#   --name: 自定义名字，否则为系统随机分配
+#   镜像： 可以用镜像id/镜像名称(加tag)
+docker run -d --name erick_redis -p 6379:6379 41de2cc0b30e
+docker run -d --name lucy_redis -p 6380:6379 redis:6.0.7
+```
+
+### 前台启动
+
+- 有些容器必须是-d，有些容器必须是-it
+
+```bash
+# -i ： interactive     以交互模式运行容器，通常与 -t同时使用
+# -t：  tyy            为容器分配一个伪输入终端，通常与 -i同时使用
+docker run -it 
+```
+
+### 查看
+
+```bash
+# 查看运行中的镜像/所有的容器
+# -a : 当前所有正在运行的容器+历史运行过的
+# -l： 显示最近创建的一个容器
+# -n： 显示最近n个创建的容器
+# -q： 只显示容器编号
+docker ps
+docker ps -a
+docker ps -n 2
+docker ps -l
+docker ps -q
+
+# 查看docker的某个容器日志 （容器id）
+docker logs 89ce823c53b9
+docker logs --since 30m 89ce823c53b9
+docker top c0bd7fd3f2e8      # 查看某个容器里面的进程:比如包含jvm，mysql，redis三个进程
+docker inspect c0bd7fd3f2e8
+```
+
+![image-20250110101758400](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250110101758400.png)
+
+### 停止/删除
+
+```bash
+# container_id 或者 names
+
+# 停止/启动/重启 创建好的容器； 
+docker stop/start/restart containerId
+docker kill containerId  # 强制删除
+
+# 删除容器  
+docker rm 073fe4390fa0              # 容器必须关闭才能删除
+docker rm -f 073fe4390fa0           # 强制删除正在运行中的容器
+docker rm -f $(docker ps -a -q)     # 删除所有容器
+docker ps -a -q|xargs docker rm -f  # 删除所有容器
+```
+
+### 进出容器
+
+```bash
+# 进入docker中的 容器ID 或 容器名称, 进入后的容器，也是一个小型的linux
+# -it：打开命令行
+# exec是在容器中打开新的终端，并且可以启动新的进程，用exit退出后，不会导致容器的停止
+docker exec -it c0bd7fd3f2e8 /bin/bash
+
+# 直接进入容器，启动命令的终端，不会启动新的进程，用exit推出后，会导致容器的停止
+docker attach c0bd7fd3f2e8
+
+# 退出容器
+exit
+```
+
+### docker--linux文件拷贝
+
+```bash
+# 将容器内的文件，拷贝到linux的宿主机上
+docker cp c0bd7fd3f2e8:/data/dump.rdb /tmp
+
+# 将linux宿主机上的东西拷贝到容器内
+docker cp /tmp/erick.txt c0bd7fd3f2e8:/data
+```
+
+### 容器备份
+
+```bash
+# 将整个容器进行导出到本地为tar包，会导出到命令所在目录
+docker export c0bd7fd3f2e8 > erick.tar
+
+# 将tar包解压为新的image镜像
+cat erick.tar | docker import - daydreamer/redis:0.0.1.snapshot
+```
+
+![image-20250110113304777](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250110113304777.png)
+
+# 自定义镜像
+
+
+
+
 
 # Dockerfile
 
