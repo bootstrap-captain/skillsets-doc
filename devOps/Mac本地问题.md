@@ -1,7 +1,15 @@
-## mac的IP
+# mac的IP
 
 ```BASH
 ipconfig getifaddr en0
+```
+
+# sftp功能
+
+```bash
+ # mac的上传和下载
+ - put source target   # 上传
+ - get source target   # 下载
 ```
 
 # 云服务器

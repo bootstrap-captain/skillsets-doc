@@ -1,22 +1,28 @@
 - 阿里Centos 7.6安装
 
-# 安装Docker
+# Tomcat
 
-- Docker并非一个通用的容器工具，依赖于已经存在并运行的Linux内核环境，在Linux下制造了一个隔离的文件环境
+## Docker
 
 ```bash
-# 1. 安装 Docker 依赖的软件包
-sudo yum install -y yum-utils
+# 拉
+docker pull tomcat
 
-# 2. 设置Docker远程仓库
+# 运行
+docker run -d -p 8080:8080 --name my_tomcat tomcat
 
+# 查看对应容器的目录: 修改文件，因为tomcat的docker版本存在的问题
+ls -l
+rm -rf webapps        
+mv webapps.dist webapps
 
-# 2. 查看版本
-docker -v
-docker version
+# 浏览器访问
+http://39.105.210.163:8080/
 ```
 
-# 安装JDK17/8
+
+
+# JDK17/8
 
 ## 1. 下载
 
@@ -69,9 +75,11 @@ Java HotSpot(TM) 64-Bit Server VM (build 17.0.4.1+1-LTS-2, mixed mode, sharing)
 - 需要重新打开terminal，不然可能出现查看java -version可能没改过来
 ```
 
-# 安装Redis
+# Redis-7.2.4
 
-## 单机版-7.2.4
+## 单机版
+
+### 安装包
 
 - [官网下载](https://redis.io/download)一个redis
 - 版本地址：https://download.redis.io/releases/
@@ -130,6 +138,19 @@ Redis server v=7.2.4 sha=00000000:0 malloc=jemalloc-5.3.0 bits=64 build=a2033819
 username: default
 password: 123456
 ```
+
+### Docker
+
+```bash
+# 拉
+docker pull redis:7.2.4
+
+
+```
+
+![image-20250113134855946](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250113134855946.png)
+
+
 
 # 安装Kafka
 
@@ -391,19 +412,19 @@ put /Users/shuzhan/Desktop/mongodb.conf /opt
 /usr/local/mongodb/bin/mongod -f /opt/mongodb.conf 
 ```
 
-# MYSQL
+# MYSQL-8.0.27
 
 ## 1. 单机版
 
-- 环境：CentOS7.6，MySQL 8.0.27
+### 安装包
+
 - [MySQL社区版](https://downloads.mysql.com/archives/community/)
 
 ![image-20230731163537301](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20230731163537301.png)
 
-### 1.1 上传文件
+#### 传文件
 
 ```bash
-# mac本地, 将文件上传到linux服务器的/opt目录下
 put /Users/shuzhan/Desktop/mysql-8.0.27-1.el7.x86_64.rpm-bundle.tar /opt
 
 # 解压对应的文件得到多个文件,标注1的是需要的
@@ -428,7 +449,7 @@ cp mysql-community-libs-8.0.27-1.el7.x86_64.rpm erick_mysql
 cp mysql-community-server-8.0.27-1.el7.x86_64.rpm erick_mysql
 ```
 
-### 1.2 CentOS7检查MySQL依赖
+#### 检查MySQL依赖
 
 ```bash
 # 检查/tmp临时目录权限(必不可少)
@@ -436,7 +457,7 @@ cp mysql-community-server-8.0.27-1.el7.x86_64.rpm erick_mysql
 cd /
 chmod -R 777 /tmp
 
-# 检查存在libaio依赖, 存在net-tools依赖
+# 检查libaio 和 net-tools依赖
 # 存在时候的结果： libaio-0.3.109-13.el7.x86_64,     net-tools-2.0-0.25.20131004git.el7.x86_64
 rpm -qa | grep libaio 
 rpm -qa | grep net-tools
@@ -445,7 +466,7 @@ rpm -qa | grep net-tools
 yum install -y libaio
 ```
 
-### 1.3 安装
+#### 安装
 
 - 严格按照下面rpm顺序
 
@@ -473,7 +494,7 @@ mysql --version
 mysqladmin --version
 ```
 
-### 1.4 服务初始化
+#### 服务初始化
 
 - 为了保证数据库目录与文件的所有者为mysql登录用户，如果是以root身份运行mysql服务，需要执行命令初始化
 
@@ -501,7 +522,7 @@ systemctl enable mysqld.service
 systemctl disable mysqld.service
 ```
 
-### 1.5 登录
+#### 登录
 
 ```bash
 # 输入密码
@@ -517,7 +538,7 @@ alter user 'root'@'localhost' identified by 'erick_123456';
 show databases;
 ```
 
-### 1.6 远程连接
+#### 远程连接
 
 ```sql
 # 默认的root用户，只能是localhost来访问
@@ -530,6 +551,29 @@ UPDATE user SET host='%' WHERE user='root';
 # 一定要刷新一下
 FLUSH privileges;
 ```
+
+### Docker
+
+```bash
+# 拉
+docker pull mysql:8.0.27
+
+# -e：配置环境变量
+# MYSQL_ROOT_PASSWORD设置root用户的密码
+# 一定要进行容器卷数据备份挂载
+# /var/lib/mysql： 容器内数据保存的地方
+# /etc/my.conf：   容器内配置文件保存的地方
+docker run -p 3306:3306 -e MYSQL_ROOT_PASSWORD=Sz19910917@ -d 3218b38490ce
+
+# 进入容器登陆
+mysql -u root -p
+
+# 随后用datagrip进行连接
+user=root
+pwd=Sz19910917@
+```
+
+
 
 # 安装**Maven3.6.3**
 

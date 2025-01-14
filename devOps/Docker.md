@@ -124,6 +124,22 @@ vim /etc/docker/daemon.json
 # 重启docker
 # 测试
 docker run hello-world
+
+# 多配置几个镜像源，希望总有能用的
+{
+  "registry-mirrors": [
+    "https://registry.docker-cn.com",
+    "http://hub-mirror.c.163.com",
+    "https://dockerhub.azk8s.cn",
+    "https://mirror.ccs.tencentyun.com",
+    "https://registry.cn-hangzhou.aliyuncs.com",
+    "https://docker.mirrors.ustc.edu.cn",
+    "https://docker.m.daocloud.io",   
+    "https://noohub.ru", 
+    "https://huecker.io",
+    "https://dockerhub.timeweb.cloud" 
+  ]
+}
 ```
 
 ## 镜像命令
@@ -175,6 +191,9 @@ docker rmi -f $(docker images -qa)
 #   -p： 端口映射 9001:9000,  左边=linux宿主机端口   右边=docker内部，该容器的端口
 #   --name: 自定义名字，否则为系统随机分配
 #   镜像： 可以用镜像id/镜像名称(加tag)
+#    --restart=always    docker启动后，自动启动该容器
+
+# 如果没有对应的容器，就会先去执行docker pull
 docker run -d --name erick_redis -p 6379:6379 41de2cc0b30e
 docker run -d --name lucy_redis -p 6380:6379 redis:6.0.7
 ```
@@ -265,40 +284,175 @@ cat erick.tar | docker import - daydreamer/redis:0.0.1.snapshot
 
 ![image-20250110113304777](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250110113304777.png)
 
+## 容器数据卷
+
+- CentOS7安全模块的作用，因此在挂载目录时可能存在权限问题
+- --privileged=true， 容器内的root拥有linux的真正的root权限，否则容器内的root只是外部的一个普通用户权限
+- 实现容器内的数据和宿主机的数据共享，数据备份
+
+```bash
+# 卷：docker容器中的目录或文件
+# --privileged=true ：                  权限问题
+# -v /宿主机绝对路径:/容器内目录            数据映射
+docker run -it --privileged=true -v /宿主机绝对路径:/容器内目录 镜像名
+```
+
+- 卷中的更改，可以直接实时生效同步到linux宿主机上
+- 卷中的更改，不会包含在镜像的更新中
+- 卷的生命周期，一直持续到没有容器使用它为止
+- 以redis为例，验证，默认docker中启动redis后，数据保存在容器的 /data下
+
+### 数据互通
+
+- 数据卷挂载后，两个目录数据会进行实时同步更新
+- 主机写，容器跟进。容器写，主机跟进。
+
+```bash
+# -v /tmp/redis/data:/data 7614ae9453d1
+# /opt/redis/data:       宿主机的目录,没有对应的目录时，会自动创建
+# /data：                 容器内的目录
+docker run -d --name erick_redis -p 6379:6379 --privileged=true -v /opt/redis/data:/data 7614ae9453d1
+
+# 在redis中执行写操作，并且手动bgsave,就会由redis在容器的 data目录中产生dumb.rdb
+- 容器中：     存在dumb.rdb文件
+- 宿主机目录： /opt/redis/data，也存在对应的dumb.redis文件
+
+# 在redis的data目录中，手动创建1.txt文件
+- 容器中：     存在1.txt文件
+- 宿主机目录： /opt/redis/data，也存在对应的1.txt文件
+
+# 在宿主机目录中创建2.txt
+- 宿主机目录： /opt/redis/data：     存在2.txt文件
+- 容器中  ： data目录，               也存在对应的2.txt文件
+
+# 是否挂载成功
+docker inspect containerId
+```
+
+```bash
+# 挂载数据卷后，假如容器突然停了，再往linux宿主机中添加数据时
+# 容器再次启动后，linux宿主机刚才添加的数据，会再次同步到容器内部中
+```
+
+### 读写规则
+
+- 上面的数据卷挂载，为可读可写
+
+```bash
+# 默认是rw
+docker run -d --name erick_redis -p 6379:6379 --privileged=true -v /opt/redis/data:/data 7614ae9453d1
+
+# ro： 容器内部被限制，只读不写 readonly
+# reids不能设置成这种，redis默认就是给容器内写数据的
+docker run -d --name erick_redis -p 6379:6379 --privileged=true -v /opt/redis/data:/data:ro 7614ae9453d1
+```
+
+### 卷的继承
+
+- 容器A和宿主机建立了某种映射规则，容器B可以继承这种规则
+- 后续即使容器A挂了，这种映射规则并不会受到影响
+
+```bash
+# 容器A创建映射规则
+docker run -d --name first_redis -p 6379:6379 --privileged=true -v /opt/redis/data:/data 7614ae9453d1
+
+# 容器B继承容器A的映射规则
+docker run -d --name second_redis -p 6380:6379 --privileged=true --volumes-from first_redis 7614ae9453d1
+```
+
+
+
 # 自定义镜像
 
+## 镜像分层
+- 联合文件系统：Union FS， 支持对文件系统的修改作为一次提交来进行层层叠加
+- 镜像可以通过分层来进行继承。基于基础镜像，可以制作具体的各种应用的镜像
+- 一个镜像，相当于一个简易版本的linux内核，比如常见就不包含vim
+- 镜像分层：可以共享
 
+### vim安装
+- 给某个不具备vim指令的docker容器中添加该功能，比如redis中的容器中不包含vim指令
+- 将具备vim指令的docker容器做成新的镜像
 
+```bash
+# 1. 在某个容器中安装新的软件
+- docker exec -it containerId /bin/bash  # 进入容器
+- apt-get  update                   # 更新包管理工具
+- apt-get install -y vim            # 下载vim
 
+# 2. 退出容器，将当前容器提交打包，做成新的镜像存储在本地
+exit
+# 2.1   -m：评论
+# 2.2   -a: 作者
+# 2.3   容器的id
+# 2.4   新镜像的名字及版本号
+# 做成的新镜像，因为安装了vim，相对会大70m，直接运行，就会带有vim
+# commit: 将镜像存储到本地
+docker commit -m 'redis with vim ' -a Erick 734d8f184c34 redis_vim:0.0.1.snpshot
+
+# 3. 验证
+docker run -d --name erick_redis -p 6379:6379 dcaee69013da
+进入容器，验证vim
+```
+
+![image-20250110153145025](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250110153145025.png)
+
+## 推送阿里云
+
+- 将linux服务器上自己创建的新的镜像，推送到阿里云
+
+### 镜像namespace
+
+![image-20250112101504862](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250112101504862.png)
+
+### 阿里云推送
+
+```bash
+# 在linux服务器中： 登陆
+docker login --username=daydreamer002 registry.cn-beijing.aliyuncs.com
+
+# 输入密码
+
+# 将本地的image和阿里云镜像对应起来
+REPOSITORY   TAG             IMAGE ID       CREATED        SIZE
+redis_vim    0.0.1.snpshot   dcaee69013da   43 hours ago   156MB
+
+# dcaee69013da: 本地的imageId
+# redis-vim-erick:1.0.0.release :  本地镜像的名字及版本号
+docker tag dcaee69013da registry.cn-beijing.aliyuncs.com/erick-prod/redis_vim:0.0.1.snpshot
+
+# 本地image上传
+docker push registry.cn-beijing.aliyuncs.com/erick-prod/redis_vim:0.0.1.snpshot
+
+# 拉取远程镜像
+docker pull registry.cn-beijing.aliyuncs.com/erick-prod/redis_vim:0.0.1.snpshot
+```
 
 # Dockerfile
 
-- 用来构建docker镜像的文本文件，是由一条条构建镜像所需要的指令和参数构成的脚本文件
+- 构建docker镜像的文本文件，由多条构建镜像所需要的指令和参数构成的脚本文件
 
-## 1. 简介
+## 语法
 
-### 1.1 基础知识
-
-- 每条保留字指令必须为大写字母，后面要至少跟随一个参数
+- 指令必须为大写字母，后面至少跟随一个参数
 - 指令按照从上到下，顺序执行
-- \# 表示注释
 - 每条指令都会创建一个新的镜像层并对镜像进行提交
 
-### 1.2 构建流程
-
+```bash
+# 构建流程
 - docker从基础镜像运行一个容器
 - 执行一条指令并对容器做出修改
 - 执行类似docker commit的操作提交一个新的镜像层
 - docker再基于刚提交的镜像运行一个新容器
 - 执行dockerfile中的下一条指令直到所有指令执行完毕
 
-### 1.3 角色
-
+# 角色
 - Dockerfile：软件的原材料， 面向开发
 - Docker镜像： 软件的交付品，交付标准
-- Docker容器：软件镜像的运行台，部署与运维
+- Docker容器： 软件镜像的运行台，部署与运维
+```
 
-## 2. 保留字
+## 关键字
 
 ```bash
 # 基础镜像：当前新镜像是基于哪个镜像的，指定一个已经存在的镜像作为模板
@@ -308,8 +462,8 @@ FROM
 # 镜像维护者的姓名和邮箱地址
 MAINTAINER
 
-# 等同于在终端操作的shell命令，容器构建时需要运行的命令
-# 两种格式： shell格式和exec格式
+# 等同于在终端操作的shell命令，容器build时需要运行的命令
+# 两种格式： shell格式:在终端中的指令                exec格式
 # RUN 是在docker build时运行
 RUN<命令行命令>
 
@@ -319,14 +473,14 @@ EXPOSE
 # 指定在创建容器后，终端默认登录的进来工作目录，一个落脚点
 WORKDIR
 
-# 指定该镜像是以什么样的用户去执行，默认为root，权限相关
+# 指定该镜像是以什么样的用户去执行，默认为root，权限相关(用的较少)
 USER
 
 # 配置环境变量
 # 可以在后续的任何RUN指令中使用，
 ENV
 
-# 将宿主机目录下的文件拷贝进镜像，且会自动处理URL和解压tarr压缩包
+# 将宿主机目录下的文件拷贝进镜像，且会自动处理URL和解压tar压缩包
 ADD
 
 # 将宿主机目录下的文件拷贝进镜像
@@ -334,23 +488,24 @@ COPY
 
 # 容器数据卷，用于数据保存和持久化工作
 VOLUME
+```
 
-# 指定容器启动后要做的事情
+```bash
+# 容器启动后要做的事情
+
 # Dockerfile中可以有多个CMD指令，但只有最后一个生效
 # CMD会被docker run之后的参数替换， 为用户提供了自定义参数
+# shell格式 和 exec格式
 CMD
 
-# 指定容器启动时需要的命令
 # 类似CMD，但ENTRYPOINT不会被docker run后面的命令覆盖
 # 可变参数时： CMD就是给ENTRYPOINT传参
 ENTRYPOINT
 ```
 
-# Docker微服务
+## 微服务-基本
 
-## 1. 本地服务打包
-
-### 1.1 服务依赖
+### 依赖
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -359,14 +514,14 @@ ENTRYPOINT
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.erick</groupId>
-    <artifactId>guli-mall</artifactId>
+    <groupId>com.daydreamer</groupId>
+    <artifactId>nike-mall</artifactId>
     <version>1.0-SNAPSHOT</version>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
-        <spring-boot>2.7.3</spring-boot>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
     <parent>
@@ -374,7 +529,6 @@ ENTRYPOINT
         <artifactId>spring-boot-starter-parent</artifactId>
         <version>2.7.3</version>
     </parent>
-
 
     <dependencies>
         <dependency>
@@ -386,129 +540,171 @@ ENTRYPOINT
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
     </dependencies>
-
     <build>
-        <!-- ......用于扫描 dao 文件下的mapper 文件................. start -->
-        <resources>
-            <!-- 编译 src/main/java 目录下的 mapper 文件 -->
-            <resource>
-                <directory>src/main/java</directory>
-                <includes>
-                    <include>**/*.xml</include>
-                </includes>
-                <filtering>false</filtering>
-            </resource>
-
-            <resource>
-                <directory>src/main/java</directory>
-                <includes>
-                    <include>**/*</include>
-                </includes>
-            </resource>
-            <resource>
-                <directory>src/main/resources</directory>
-                <includes>
-                    <include>**/*</include>
-                </includes>
-            </resource>
-        </resources>
-        <!-- ......用于扫描 dao 文件下的mapper 文件................. end -->
-
         <plugins>
             <!--maven package的插件-->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
-            <!--添加配置跳过测试-->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.22.1</version>
-                <configuration>
-                    <skipTests>true</skipTests>
-                </configuration>
-            </plugin>
-            <!--添加配置跳过测试-->
         </plugins>
     </build>
-
 </project>
 ```
 
-### 1.2  maven打包
+### maven打包
 
-- 打包得到对应的jar包
-- 打包后后，通过java -jar 来验证是否可以本地正常启动
-- 默认端口为8080
+- 打包得到对应的fat-jar包
+- 打包后，通过java -jar 来验证是否可以本地正常启动
 
-![image-20220831170740333](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20220831170740333.png)
+![image-20250113145738662](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250113145738662.png)
 
-### 1.3 Dockerfile
+### Dockerfile
 
 ```bash
-# 具体的版本信息，可以从dockerhub镜像上找
 # 基础镜像是该jdk,将该jdk安装在docker中
 FROM openjdk:17.0-jdk
 
 # 将该jar包文件，拷贝到容器中，并更名
-# 是因为后续会将Dockerfile和对应java包放在服务器同一个目录下
-COPY guli-mall-1.0-SNAPSHOT.jar guli-erick.jar
+# 后续会将Dockerfile和对应java包放在目标服务器同一个目录下
+COPY nike-mall-1.0-SNAPSHOT.jar nike-mall.jar
 
-# 按照java -jar guli-erick.jar来运行
-ENTRYPOINT ["java","-jar","guli-erick.jar"]
+# 按照java -jar nike-mall.jar来运行
+ENTRYPOINT ["java","-jar","nike-mall.jar"]
 ```
 
-## 2. 服务器构建
-
-### 2.1 上传文件
+### 上传文件
 
 - 将对应的jar包和Dockerfile上传到阿里云服务器的同一个目录下
 
-```bash
- # mac的sftp功能
- - put source target   # 上传
- - get source target   # 下载
-```
+### 镜像Build
 
-### 2.2 构建镜像
+- 进入到阿里云服务器Dockerfile和jar包的目录
+- 目标服务器已经安装了docker
 
 ```bash
-# 进入到阿里云服务器Dockerfile和jar包的目录
-# nike-guli:     对应的docker image的名字
+# nike-mall:     对应的docker image的名字
 # 1.0:           版本号
-# .  :           不能缺少, 代表在当前目录下
-docker build -t nike-guli:1.0 .
-```
+# .  :           不能缺少, 代表在当前目录下查找对应的dockerfile以及jar文件
+docker build -t nike-mall:1.0.0.snapshot .
 
-![image-20220831181610088](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20220831181610088.png)
+# 构建成功后，通过docker images查看镜像
 
-### 2.3 运行容器
-
-```bash
 # 容器里面启动的是8080端口，9090是对外访问的端口
-docker run --name balance-service -d -p 9090:8080 51b6019f5c15
+docker run --name myproject  -d -p 9090:8080 9b0033c1747b
 
 # 访问路径
-http://60.205.229.31:9090/user/date
+http://39.105.210.163:9090/home/test
 ```
+
+![image-20250113154209673](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250113154209673.png)
+
+## 微服务-进阶
+
+### Dockerfile
+
+```bash
+# 基础镜像是该jdk,基于jdk该版本
+FROM openjdk:17.0-jdk
+# 维护作者
+MAINTAINER ErickShu-1037289945@qq.com
+
+# 在容器中，循环该目录
+RUN mkdir -p opt/erick/service
+# 将Dockerfile所在路径的jar包，拷贝到容器指定的目录中，并更名
+COPY nike-mall-1.0-SNAPSHOT.jar /opt/erick/service/nike-mall.jar
+
+# 设置一个Linux的环境变量, 可以通过spring-java代码获取拿到该值
+ENV Base_Url 'nike.com'
+# 获取并打印Linux的该环境变量
+RUN echo ${Base_Url}
+
+# 按照java -jar nike-mall.jar来运行
+# 用全路径，否则要设置jdk的环境变量
+ENTRYPOINT ["java","-jar","/opt/erick/service/nike-mall.jar"]
+```
+
+![image-20250113222815022](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250113222815022.png)
+
+### 运行
+
+```bash
+# 进入对应的Dockerfile和jar包的路径
+docker build -t nike-mall:2.0.0.snapshot .
+
+# 运行 9090: 上面expose的端口，    9091：linux的宿主机端口
+docker run --name second-project  -d -p 9091:8080 67a5b91c0c0d
+
+# 查看
+http://39.105.210.163:9091/home/test
+
+# 结果
+@GetMapping("/test")
+public String getName() {
+    System.out.println(env);
+    return env.getProperty("Base_Url");
+}
+// nike.com
+```
+
+# Network
+
+
 
 # Docker-Compose
 
-## 1. 简介
+## 简介
 
 - Docker官方的开源项目，负责实现对Docker容器集群的快速编排
-- 管理多个Docker容器，组成一个应用。同时要注意各个组件的启动顺序
-- 定义一个docker.compose.yaml， 写好多个容器之间的调用关系。通过一个命令，同时启动/关闭这些容器
-
-## 2. 常用命令
+- 管理多个Docker容器，组成一个应用。同时注意各个组件的启动顺序
+- 定义一个docker-compose.yaml， 配置好多个容器之间的调用关系
 
 ```bash
-docker-compose -version               # 查看版本
+# 一个容器，一个服务
+- docker容器本身占用资源极少，所以最好是将每个服务单独的分割开来
 
+# docker-compose
+- 假如一个项目用到了多个微服务，mysql，redis， 统一编排一个docker-compose.yaml文件，定义一组相互关联的容器编排
+
+# 安装： 安装上面的docker-engine的时候已经自己带了
+docker compose version          # Docker Compose version v2.27.1
+docker -v                       # Docker version 26.1.4, build 5650f9b
+
+# 两要素
+- 文件：     docker-compose.yml
+- service：  一个个应用容器实例，比如不同的多个微服务
+- project：  一组关联的应用容器，组成的一个完整业务单元
+
+# 常用命令
 docker-compose up                     # 启动所有docker-compose服务
 docke-compose up -d                   # 启动所有docker-compose服务并后台运行
 dokcer-compose down                   # 停止并删除容器，网络，卷，镜像
 docker-compose restart/start/stop     # 重启/启动/停止
 ```
+
+## 微服务编排
+
+# Portainer
+
+- 轻量级的docker可视化工具
+- [官网安装](https://docs.portainer.io/start/install-ce/server/docker/linux)
+
+```bash
+# 数据卷
+docker volume create portainer_data
+
+# 安装
+docker run -d -p 8000:8000 -p 9443:9443 --name portainer --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer-ce:2.21.5
+
+# 登陆
+https://39.105.210.163:9443
+
+# 初始化用户名和密码
+username：erick
+password：shuzhan19970701
+```
+
+![image-20250114203305246](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250114203305246.png)
+
+![image-20250114203546242](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250114203546242.png)
 
