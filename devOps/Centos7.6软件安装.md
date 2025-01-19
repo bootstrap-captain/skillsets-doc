@@ -57,8 +57,6 @@ export CLASSPATH=.:$JAVA_HOME/lib
 export PATH=$PATH:$JAVA_HOME/bin:$JAVA_HOME/jre/bin
 ```
 
-![image-20220901004521435](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20220901004521435.png)
-
 ## 4. 刷新环境变量
 
 ```bash
@@ -575,36 +573,30 @@ pwd=Sz19910917@
 
 
 
-# 安装**Maven3.6.3**
-
-## 1. 下载
+# Maven-3.9.9
 
 - [官网下载](https://archive.apache.org/dist/maven/maven-3/3.6.3/binaries/)
 
-## 2. 上传安装
-
-- Maven依赖Java环境，因此必须先下载Java并配置环境变量
+- Maven依赖Java
 
 ```bash
 # 上传到usr/local目录下并解压
-put /Users/shuzhan/Desktop/apache-maven-3.6.3-bin.tar.gz /usr/local
-tar -zxvf apache-maven-3.6.3-bin.tar.gz
+put /Users/shuzhan/Desktop/apache-maven-3.9.9-bin.tar.gz /usr/local
+tar -zxvf apache-maven-3.9.9-bin.tar.gz
 
 # 查看版本， 出现下面代表安装成功
-/usr/local/apache-maven-3.6.3/bin/mvn -v
+/usr/local/apache-maven-3.9.9/bin/mvn -v
 
 
-Maven home: /usr/local/apache-maven-3.6.3
+Maven home: /usr/local/apache-maven-3.9.9
 Java version: 17.0.4.1, vendor: Oracle Corporation, runtime: /usr/local/java17/jdk-17.0.4.1
 Default locale: en_US, platform encoding: ANSI_X3.4-1968
 OS name: "linux", version: "3.10.0-957.21.3.el7.x86_64", arch: "amd64", family: "unix"
 ```
 
-## 3. 镜像配置
-
 -  修改maven的对应的setting.xml
 
-```
+```xml
 <mirror>
       <id>alimaven</id>
       <name>aliyun maven</name>
@@ -960,65 +952,6 @@ under the License.
 
 </settings>
 ```
-
-# Jenkins安装
-
-- Jenkins是一个war包，因此服务器需要先安装JDK
-
-- Jenkins需要用Maven进行打包，所以服务器需要先下载Maven
-
-- Jenkins需要用到git拉代码，因此需要先下载Git
-
-- CICD: continuous integration, continuous deploy 
-
-## 1.  下载
-
-- [官网war包](https://www.jenkins.io/download/)
-- version：2.361.2
-
-```bash
-# 将对应war包上传到Linux,
-put /Users/shuzhan/Desktop/jenkins.war /usr/local
-```
-
-## 2. 启动
-
-```bash
-# 后台启动Jenkins
-#  & 表示后台启动     nohup 是centos的后台启动的指令
-# >jenkins.log： 在命令执行的目录下，生成jenkins.log文件，并将启动日志写入
-# >  >> 文件写入流的两种方式    > 覆盖              >> 追加
-#  2>&1     2表示错误输出，1表示标准输出      错误输出和标准输出都写进来
-# 如果不写输出日志，则命令会卡住，按回车后会将日志默认写入到nohup.log中
-nohup java -jar jenkins.war --httpPort=8081 >jenkins.log 2>&1 &
-
-# jps查看是否启动成功
-jps
-```
-
-```bash
-#  如果出现下面错误，是因为缺少字体的原因
-yum install fontconfig
-fc-cache --force
-```
-
-![image-20220901014435411](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20220901014435411.png)
-
-## 3. 访问
-
-```bash
-# 通过浏览器访问, 第一次进入需要admin的密码
-http://119.23.242.170:8081/
-
-# 根据红字提示查看密码
-# 输入密码，等待响应，第一次加载时间会比较慢
-
-# 其他安装
-- 按照提示安装指定插件
-- 创建admin用户
-```
-
-![image-20220901015413967](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20220901015413967.png)
 
 #  Git安装
 

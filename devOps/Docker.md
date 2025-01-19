@@ -110,21 +110,9 @@ docker info
 ### 镜像配置
 
 - docker镜像默认从海外拉取
-- 可以配置阿里云镜像作为仓库
 
 ```bash
-# 登陆阿里云 --> 容器镜像服务 --> 镜像工具 --> 镜像加速器
-# 拷贝对应的镜像地址
 vim /etc/docker/daemon.json
-
-{
-  "registry-mirrors": ["https://xxxxxr.mirror.aliyuncs.com"]
-}
-
-# 重启docker
-# 测试
-docker run hello-world
-
 # 多配置几个镜像源，希望总有能用的
 {
   "registry-mirrors": [
@@ -140,6 +128,10 @@ docker run hello-world
     "https://dockerhub.timeweb.cloud" 
   ]
 }
+
+# 重启docker
+# 测试
+docker run hello-world
 ```
 
 ## 镜像命令
@@ -173,7 +165,7 @@ docker pull tomcat:7.0
 
 # 4. 删除软件镜像(IMAGE_ID),该镜像的所有实例都已经删除时,才可以删除镜像
 # 加上- f ，即使该image有对应的container，强制删除image
-docker rmi -f bd54813ab48c                        # rm images
+docker rmi -f bd54813ab48c                       
 
 # 先获取所有的imageid，然后全部强制删除
 docker rmi -f $(docker images -qa)
@@ -188,7 +180,7 @@ docker rmi -f $(docker images -qa)
 ```bash
 # 启动
 #   -d： 以后台模式打开一个容器，不打开命令终端
-#   -p： 端口映射 9001:9000,  左边=linux宿主机端口   右边=docker内部，该容器的端口
+#   -p： 端口映射 9001:9000,  左边=linux宿主机端口   右边=docker内部，该容器开放的端口
 #   --name: 自定义名字，否则为系统随机分配
 #   镜像： 可以用镜像id/镜像名称(加tag)
 #    --restart=always    docker启动后，自动启动该容器
@@ -196,6 +188,9 @@ docker rmi -f $(docker images -qa)
 # 如果没有对应的容器，就会先去执行docker pull
 docker run -d --name erick_redis -p 6379:6379 41de2cc0b30e
 docker run -d --name lucy_redis -p 6380:6379 redis:6.0.7
+
+# 针对已经启动的容器，修改参数
+docker update 41de2cc0b30e --restart=always
 ```
 
 ### 前台启动
@@ -262,6 +257,8 @@ docker attach c0bd7fd3f2e8
 exit
 ```
 
+## 容器备份
+
 ### docker--linux文件拷贝
 
 ```bash
@@ -272,17 +269,30 @@ docker cp c0bd7fd3f2e8:/data/dump.rdb /tmp
 docker cp /tmp/erick.txt c0bd7fd3f2e8:/data
 ```
 
-### 容器备份
+### 数据备份
+
+- 用于备份或迁移容器的文件系统，而不包括 Docker 镜像的所有层和元数据
+- 导出容器的时候，不能对现有容器进行再次的添加镜像分层
 
 ```bash
-# 将整个容器进行导出到本地为tar包，会导出到命令所在目录
-docker export c0bd7fd3f2e8 > erick.tar
+# 容器备份： 容器id
+# 将整个容器进行导出到本地为tar包
+# 会导出到命令所在目录
+docker run -d --name erick_redis -p 6379:6379 4075a3f8c3f8
+# 进入容器
+touch 1.txt
+echo "shuzhan" > 1.txt 
+# 退出容器
 
-# 将tar包解压为新的image镜像
-cat erick.tar | docker import - daydreamer/redis:0.0.1.snapshot
+
+# 导出容器
+docker export f4cb760eeaa4 > erick.tar 
+# 将tar包解压为新的image镜像  
+cat erick.tar | docker import - redis:10
+
+# 运行新的image后，会带有vim和上面的1.txt文件
+docker run -d --name second_redis -p 6380:6379 ba65741c9416
 ```
-
-![image-20250110113304777](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250110113304777.png)
 
 ## 容器数据卷
 
@@ -360,8 +370,6 @@ docker run -d --name first_redis -p 6379:6379 --privileged=true -v /opt/redis/da
 docker run -d --name second_redis -p 6380:6379 --privileged=true --volumes-from first_redis 7614ae9453d1
 ```
 
-
-
 # 自定义镜像
 
 ## 镜像分层
@@ -370,13 +378,16 @@ docker run -d --name second_redis -p 6380:6379 --privileged=true --volumes-from 
 - 一个镜像，相当于一个简易版本的linux内核，比如常见就不包含vim
 - 镜像分层：可以共享
 
-### vim安装
+## Vim安装
 - 给某个不具备vim指令的docker容器中添加该功能，比如redis中的容器中不包含vim指令
 - 将具备vim指令的docker容器做成新的镜像
 
 ```bash
 # 1. 在某个容器中安装新的软件
+- docker pull redis
+- docker run -d --name erick_redis -p 6379:6379 4075a3f8c3f8
 - docker exec -it containerId /bin/bash  # 进入容器
+- touch 1.txt                       # 创建了一个文件
 - apt-get  update                   # 更新包管理工具
 - apt-get install -y vim            # 下载vim
 
@@ -387,25 +398,22 @@ exit
 # 2.3   容器的id
 # 2.4   新镜像的名字及版本号
 # 做成的新镜像，因为安装了vim，相对会大70m，直接运行，就会带有vim
-# commit: 将镜像存储到本地
-docker commit -m 'redis with vim ' -a Erick 734d8f184c34 redis_vim:0.0.1.snpshot
+# commit: 将镜像存储到本地, 本地就会多了一个image
+docker commit -m 'redis with vim ' -a Erick 1010aa9e7184 redis_vim_1.txt:0.0.1.snpshot
 
-# 3. 验证
-docker run -d --name erick_redis -p 6379:6379 dcaee69013da
-进入容器，验证vim
+# 3. 验证：
+# 应用程序: 上面安装的vim生效了
+# data：创建的1.txt文件并不会复制
+- docker run -d --name copy_redis -p 6380:6379 838b957f7f60
 ```
 
-![image-20250110153145025](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250110153145025.png)
+![image-20250116003622913](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250116003622913.png)
 
-## 推送阿里云
+## 推送hub
 
 - 将linux服务器上自己创建的新的镜像，推送到阿里云
 
-### 镜像namespace
-
 ![image-20250112101504862](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250112101504862.png)
-
-### 阿里云推送
 
 ```bash
 # 在linux服务器中： 登陆
@@ -417,8 +425,9 @@ docker login --username=daydreamer002 registry.cn-beijing.aliyuncs.com
 REPOSITORY   TAG             IMAGE ID       CREATED        SIZE
 redis_vim    0.0.1.snpshot   dcaee69013da   43 hours ago   156MB
 
-# dcaee69013da: 本地的imageId
-# redis-vim-erick:1.0.0.release :  本地镜像的名字及版本号
+# 1. tag dcaee69013da: 本地的imageId打上标签
+# 2. 远程仓库的地址
+# 3. redis-vim-erick:1.0.0.release :  本地镜像的名字及版本号
 docker tag dcaee69013da registry.cn-beijing.aliyuncs.com/erick-prod/redis_vim:0.0.1.snpshot
 
 # 本地image上传

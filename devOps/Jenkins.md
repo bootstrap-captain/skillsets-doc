@@ -1,50 +1,125 @@
-# Maven Item 构建
+**CICD: continuous integration, continuous deploy** 
 
-## Maven集成
+# 安装
 
-### Maven Integration插件
+- war包，需要用Maven打包，git拉代码
+- JDK(17)，Maven(3.9.9)，Git
 
-- 项目通过识别pom文件，用maven来打包成jar包
+## 单节点
 
-![image-20220831224136831](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20220831224136831.png)
+### 安装包
 
-### 配置Maven路径
+- [官网war包](https://www.jenkins.io/download/)
+- version：2.479.3
 
-- Dashboard---Global Tool Configuration
-- 手动配置Maven路径,  Maven为本地服务器安装的Maven
+```bash
+# 将对应war包上传到Linux
+put /Users/shuzhan/Desktop/jenkins.war /usr/local
 
-![image-20220901030331370](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20220901030331370.png)
+#  安装必要的字体，否则会出现下面的问题
+yum install fontconfig
+fc-cache --force
 
-## 项目构建
+# 后台启动Jenkins
+#  &: 后台启动     nohup 是centos的后台启动的指令
+# >jenkins.log： 在命令执行的目录下，生成jenkins.log文件，并将启动日志写入
+# >  >> 文件写入流的两种方式    > 覆盖              >> 追加
+#  2>&1     2表示错误输出，1表示标准输出      错误输出和标准输出都写进来
+# 如果不写输出日志，则命令会卡住，按回车后会将日志默认写入到nohup.log中
+cd /usr/local
+nohup java -jar jenkins.war --httpPort=8081 >jenkins.log 2>&1 &
+
+# jps查看是否启动成功
+jps
+```
+
+![image-20250118211801867](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250118211801867.png)
+
+```bash
+# 通过浏览器访问, 第一次进入需要admin的密码
+http://101.200.241.88:8081/
+
+# 根据红字提示查看密码
+# 输入密码，等待响应，第一次加载时间会比较慢
+
+# 其他安装
+- 按照提示安装指定插件
+- 创建admin用户
+```
+
+# 安装插件
+
+## Maven插件
+
+### 1. 安装
+
+![image-20250118215802317](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250118215802317.png)
+
+- 安装完成后，就会在Item中有Maven项目(默认没有)
+
+![image-20250118220419399](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250118220419399.png)
+
+### 2. 配置路径
+
+- 需要手动在Jenkins中配置上，本地Linux的Maven的路径
+- Dashboard--Manage Jenkins--Tools
+
+![image-20250118223455217](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250118223455217.png)
+
+## GIT-SSH配置
+
+- 后面代码就可以通过这种方式拉代码
+
+```bash
+# 1.在Jenkins服务器，已经安装了git，生成公私钥对
+ssh-keygen -t rsa
+
+# 2.在github上公钥地方添加 id_rsa.pub对应的内容
+
+# 在jenkins上添加私钥的内容 id_rsa
+- 用户名为生成公私钥的时候的root账户
+```
+
+![image-20250119092033640](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250119092033640.png)
+
+![image-20250119092440933](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250119092440933.png)
+
+# Item
+
+## Maven项目
+
+### 1. 项目构建
 
 -  构建对应的Maven项目--- New Item
 
-![image-20221022130726718](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20221022130726718.png)
+![image-20250119083047472](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250119083047472.png)
 
 ```bash
+# /root/.jenkins/
+- 存放对应数据
+
 # 构建完成后，会在下面创建目录
-# code example:  是项目的名称，也是对应下面包名,可以改名
+# replay-service-api:  项目名称，也是对应下面文件目录名,可以改名
 # job下存放不同的item,  包含 builds, config.xml
 # 存放的比如构建结构，下次build的number，本次build的相关参数等
 
-/root/.jenkins/jobs/code example
+/root/.jenkins/jobs/replay-service-api
 ```
 
-## 构建信息
+### 2. General
 
-### General
+![image-20250119083141594](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250119083141594.png)
 
-![image-20221022130921999](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20221022130921999.png)
+### 3. Source Code
 
-### Source Code
+#### public-repo
 
-#### 开源无需密钥
+- 通过SSH的方式拉代码
 
 ```bash
 # Repository URL: 会通过添加的git的地址，来测试是否拉取代码
-# 可以集成gitee，gitlab，github等代码托管仓库
-# 如果是开源的项目，不用配置对应的credentials
-- 可以通过http或者ssh的方式来拉取代码，就和本地IDEA拉取代码一个套路
+# 可集成gitee，gitlab，github等代码托管仓库
+- 通过https或者ssh的，和本地IDEA拉取代码类似
 
 # Branch
 - 该item需要执行的哪个branch，根据自己的github分支来决定
@@ -60,22 +135,6 @@
 ![image-20221025163132806](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20221025163132806.png)
 
 ![image-20221025163207851](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20221025163207851.png)
-
-#### SSH私钥凭证
-
-```bash
-# 进入Jenkins服务器，已经安装了git，生成公私钥对
-ssh-keygen -t rsa
-
-# 在github上公钥地方添加 id_rsa.pub对应的内容
-
-# 在jenkins上添加私钥的内容 id_rsa
-- 用户名为生成公私钥的时候的root账户
-```
-
-![image-20221025164804585](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20221025164804585.png)
-
-![image-20221025164945057](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20221025164945057.png)
 
 ### Pre Steps
 
