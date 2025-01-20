@@ -66,7 +66,9 @@ http://101.200.241.88:8081/
 
 ![image-20250118223455217](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250118223455217.png)
 
-## GIT-SSH配置
+## GIT-配置
+
+### HTTPS
 
 - 后面代码就可以通过这种方式拉代码
 
@@ -84,11 +86,18 @@ ssh-keygen -t rsa
 
 ![image-20250119092440933](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250119092440933.png)
 
-# Item
+#### 普通用户密码凭证
 
-## Maven项目
+- 适用于私人repo，通过提供对应的git仓库的用户名和密码来拉取代码
+- 拉取代码：http的方式，https://gitee.com/daydreamer9451/boot-cloud-poc.git
 
-### 1. 项目构建
+![image-20221025163132806](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20221025163132806.png)
+
+![image-20221025163207851](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20221025163207851.png)
+
+# Item-Maven
+
+## 1. 项目构建
 
 -  构建对应的Maven项目--- New Item
 
@@ -106,58 +115,39 @@ ssh-keygen -t rsa
 /root/.jenkins/jobs/replay-service-api
 ```
 
-### 2. General
+## 2. General
 
 ![image-20250119083141594](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250119083141594.png)
 
-### 3. Source Code
+## 3. Source Code
 
-#### public-repo
-
-- 通过SSH的方式拉代码
-
-```bash
-# Repository URL: 会通过添加的git的地址，来测试是否拉取代码
-# 可集成gitee，gitlab，github等代码托管仓库
-- 通过https或者ssh的，和本地IDEA拉取代码类似
-
-# Branch
+- 可集成gitee，gitlab，github等代码托管仓库， 使用国内开源gitee，避免网路问题
+- 和本地IDEA拉取代码类似
+- Repository URL: 会通过添加的git的地址，来测试是否拉取代码
 - 该item需要执行的哪个branch，根据自己的github分支来决定
-```
 
-![image-20221022131012951](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20221022131012951.png)
+![image-20250119104417663](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250119104417663.png)
 
-#### 普通用户密码凭证
+## 4. Pre Steps
 
-- 适用于私人repo，通过提供对应的git仓库的用户名和密码来拉取代码
-- 拉取代码：http的方式，https://gitee.com/daydreamer9451/boot-cloud-poc.git
-
-![image-20221025163132806](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20221025163132806.png)
-
-![image-20221025163207851](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20221025163207851.png)
-
-### Pre Steps
-
-- 在构建jar包前可以做的工作
+- 在Build对应的jar包前可执行的步骤
 
 ![image-20220831230008051](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20220831230008051.png)
 
-### Build
+## 5. Build
 
-- 需要在Jenkins服务器上安装Maven, 从而使Jenkins拉取的代码能够通过Maven解析
-- 注意对应pom.xml的路径: 对应项目所需要识别的路径
 - 是以对应的git url打开后的路径作为根路径识别pom，如果pom存在嵌套，则更改即可
 - 如果是聚合项目，则只要提供父项目的pom即可
 
 ![image-20220831230534172](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20220831230534172.png)
 
-### Post Steps
+## 6. Post Steps
 
 - 可以把构建完成后的jar包，发送到对应的服务器上，并运行
 
 ![image-20220831233324117](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20220831233324117.png)
 
-### 打Jar包
+## 打Jar包
 
 - 会将项目从git拉取过来，然后用maven进行编译，同时下载对应的依赖，就类似于本地用maven编译一样，目录结构也是和本地类似
 
@@ -352,7 +342,7 @@ cd /root/erick                # 需要先进入到这个目录，才能删除对
 
 ## 简介
 
-- 使用Pipeline， 可以将上面所有的UI操作，转换为代码，就想docker的dockerfile一样
+- 使用Pipeline， 可以将上面所有的UI操作，转换为代码，就像docker的dockerfile一样
 - Jenkinsfile一般作为源代码提交到git仓库
 
 ```bash
