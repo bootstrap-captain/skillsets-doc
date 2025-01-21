@@ -1,11 +1,77 @@
+# Git安装
+
+## 1. 介绍
+
+- 开源，分布式，版本控制系统
+- [Git官网](https://git-scm.com/downloads)
+
+## 2. 安装
+
+### Mac
+
+```bash
+brew update         # 更新Homebrew到最新版本
+brew cleanup        # 尝试清除Homebrew缓存
+
+brew install git     # 安装
+
+git --version
+git version 2.39.5 (Apple Git-154)
+```
+
+### CentOS 7.6
+
+```bash
+yum install git
+
+git --version
+
+git version 1.8.3.1
+```
+
+# 权限管理
+
+## Public Repo
+
+### HTTPS
+
+- 一般不推荐使用HTTPS的方式来拉取代码
+
+```bash
+# 通过下面的url,代码一定可以拉下来
+https://gitee.com/daydreamer9451/replay-service.git
+
+# push
+- 默认push不了，因为开源的repo，不可能每个人都能提交代码
+- git push -u origin main   
+```
+
+![image-20250120221238381](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250120221238381.png)
+
+### SSH
+
+- 一组公私钥，只能针对一个类型的repo，比如github
+
+```bash
+# 本地git安装好之后，通过指令生成本地公私密钥对
+ssh-keygen
+
+# 将公钥拷贝下来，在git仓库上进行配置，一般名字是以本地设备的名字来命名
+cat id_rsa.pub 
+
+# clone代码时候，使用git协议，不能使用https
+git@github.com:bootstrap-captain/java-develop-doc.git
+```
+
+![image-20230613154729902](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20230613154729902.png)
+
+
+
 # GIT指令
 
 ## 1. 基本指令
 
 ```bash
-# 查看git版本
-git --version
-
 # 配置用户名： 配置好的信息，就会在git提交代码的时候进行显示
 git config --global --list      # 查看git配置的参数
 git config --global -l
@@ -104,22 +170,7 @@ git reset --mixed head~1   # 撤销commit，撤销add，工作区代码改动不
 git reset --hard head~1    # 撤销commit，撤销add，工作区代码改动丢失。完成后回退到上一次commit之前的代码
 ```
 
- # 推送权限
 
-## 1. SSH
-
-```bash
-# 本地git安装好之后，通过指令生成本地公私密钥对
-ssh-keygen
-
-# 将公钥拷贝下来，在git仓库上进行配置，一般名字是以本地设备的名字来命名
-cat id_rsa.pub 
-
-# clone代码时候，使用git协议，不能使用https
-git@github.com:bootstrap-captain/java-develop-doc.git
-```
-
-![image-20230613154729902](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20230613154729902.png)
 
 # 其他细节
 

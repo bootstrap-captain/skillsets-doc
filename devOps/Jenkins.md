@@ -49,7 +49,7 @@ http://101.200.241.88:8081/
 
 # 安装插件
 
-## Maven插件
+## Maven
 
 ### 1. 安装
 
@@ -70,6 +70,12 @@ http://101.200.241.88:8081/
 
 ### HTTPS
 
+- 国内GIT仓库，可以直接拉代码
+
+![image-20250120212019086](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250120212019086.png)
+
+### SSH
+
 - 后面代码就可以通过这种方式拉代码
 
 ```bash
@@ -82,18 +88,30 @@ ssh-keygen -t rsa
 - 用户名为生成公私钥的时候的root账户
 ```
 
-![image-20250119092033640](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250119092033640.png)
-
 ![image-20250119092440933](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250119092440933.png)
 
-#### 普通用户密码凭证
+## Publish Over SSH
 
-- 适用于私人repo，通过提供对应的git仓库的用户名和密码来拉取代码
-- 拉取代码：http的方式，https://gitee.com/daydreamer9451/boot-cloud-poc.git
+- 通过SSH将文件(比如打包完成后的jar)发送到测试环境服务器上
 
-![image-20221025163132806](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20221025163132806.png)
+### 1. 安装
 
-![image-20221025163207851](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20221025163207851.png)
+![image-20250120233338940](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250120233338940.png)
+
+### 2. SSH配置
+
+- Dashboard--->Mange Jenkins ---> System
+- 可以通过用户名密码来链接，也可以通过其他证书类的链接
+- 新建后，可以通过test connection来验证链接是否成功
+- Remote Directory: 默认发送文件过去是到root目录下
+
+![image-20250120234233399](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250120234233399.png)
+
+### 3. 超时机制
+
+- 可以修改
+
+![image-20250121111235028](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250121111235028.png)
 
 # Item-Maven
 
@@ -121,7 +139,7 @@ ssh-keygen -t rsa
 
 ## 3. Source Code
 
-- 可集成gitee，gitlab，github等代码托管仓库， 使用国内开源gitee，避免网路问题
+- 可集成gitee，gitlab，github等代码托管仓库， 使用国内开源gitee，避免网络问题
 - 和本地IDEA拉取代码类似
 - Repository URL: 会通过添加的git的地址，来测试是否拉取代码
 - 该item需要执行的哪个branch，根据自己的github分支来决定
@@ -139,173 +157,117 @@ ssh-keygen -t rsa
 - 是以对应的git url打开后的路径作为根路径识别pom，如果pom存在嵌套，则更改即可
 - 如果是聚合项目，则只要提供父项目的pom即可
 
-![image-20220831230534172](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20220831230534172.png)
+![image-20250120210522748](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250120210522748.png)
 
 ## 6. Post Steps
 
 - 可以把构建完成后的jar包，发送到对应的服务器上，并运行
 
-![image-20220831233324117](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20220831233324117.png)
+![image-20250120210551237](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250120210551237.png)
 
-## 打Jar包
+## 7. Build
 
-- 会将项目从git拉取过来，然后用maven进行编译，同时下载对应的依赖，就类似于本地用maven编译一样，目录结构也是和本地类似
-
-![image-20220901030835564](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20220901030835564.png)
-
-![image-20220901030908851](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20220901030908851.png)
+- 上述步骤构建完毕后，可以手动在Item中点击build
+- 也可以通过配置的方式，来自动化构建
 
 ```bash
-# 最终打包好的jar文件, 在上面目录中
-/root/.jenkins/workspace/code-example/code-example/target/code-example-1.0-SNAPSHOT.jar
+# src文件：会将src代码拉取到该目录，并类似本地IDEA，将该文件通过maven打包生成对应的jar
+/root/.jenkins/workspace/replay-service
 
-# Jenkins目录： 下面包含git中所有的文件： src,编译完成后的target, pom.xml， 等其他还有的目录
-/root/.jenkins/workspace/code-example/code-example
+# replay-service: 根据item的名称来创建
+- 该目录下，就是对应的src
+# replay-service-api目录下
+- pom.xml  src  target
+
+# 构建记录
+/root/.jenkins/jobs/项目名
 ```
 
-#### 异常： 找不到pom
+# 微服务-Jar包
 
-```bash
-# 进入到//root/.jenkins/workspace/code-example/code-example目录下查看通过git拉取下来的代码,然后修改对应的pom路径
-ERROR: No such file /root/.jenkins/workspace/code-example pom.xml
-```
+## Post Steps
 
-# 发布Jar包
-
-- 准备一台阿里云服务器作为测试环境安装jdk17
-
-## SSH发布Jar包
-
-### Publish Over SSH插件
-
-- 在Jenkins上安装Publish Over SSH， 从而可以通过SSH将jar包发送到测试环境服务器上
-
-### 新建SSH-Server
-
-- 可以通过用户名密码来链接，也可以通过其他证书类的链接
-- 新建后，可以通过test connection来验证链接是否成功
--  Remote Directory: 默认发送文件过去是到root目录下
-
-![image-20220901170612004](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20220901170612004.png)
-
-### Item配置-Post Steps
+### 1. 发送文件
 
 - 打包完成后的后置操作，通过SSH发送文件到指定服务器
+- 指定服务器上要安装Java17
+
+![image-20250120234605225](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250120234605225.png)
 
 ```bash
-# 下面的目录： 是Jenkins打包的默认目录: 
-# code-example： 是根据job名来定的，一旦第一次构建完成， 后续job更名，但是该目录名不会变化
-/root/.jenkins/workspace/code-example/code-example/target/code-example-1.0-SNAPSHOT.jar
-
-
-# source files:  会将target/code-example-1.0-SNAPSHOT.jarr发送过去
+# source files:  会将target/replay-service-api-1.0-SNAPSHOT.jar发送过去
 - 以workspace作为根目录，可以通过匹配方式来获取到指定的文件
-**/code-example*.jar
-#  Remove Prefix: 默认前缀是workspace的项目名下的目录结构： 比如上面就是 code-example/target
-code-example/target
+**/replay-service-api*.jar
+
+#  Remove Prefix: 默认前缀是workspace的项目名下的目录结构： 比如上面就是 replay-service/replay-service-api/target
+replay-service-api/target
  
-# Remote directroy: 默认发送到测试服务器的root目录, 可以在对应的ssh-server中配置
+# Remote directroy: 默认发送到测试服务器的root目录, 可以在对应的ssh-server中配置为opt
 # 如果没有erick，则会去创建这个目录
 - erick
-- 传输过去的目录路径： /root/erick
+- 传输过去的目录路径： /opt/erick
 
 # Exec command:
 - 文件发送完成后，执行的对应操作
 
 # 最终发送到测试服务器的目录
-/root/erick/code-example-1.0-SNAPSHOT.jar
+/opt/erick/replay-service-api-1.0-SNAPSHOT.jar
 ```
 
-![image-20220904113014050](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20220904113014050.png)
+![image-20250120234854336](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250120234854336.png)
 
-## Jar包运行
+### 2. 启动服务
 
-### 测试服务器运行
+#### 手动执行
+
+- 在目标服务器中，手动启动jar包
 
 ```bash
 # 1.直接启动， 但是关闭terminal或者 ctrl+c就会终止进程
-java -jar code-example-1.0-SNAPSHOT.jar
+java -jar replay-service-api-1.0-SNAPSHOT.jar
 
 # 2.后台启动      & 表示在后台执行
-nohup java -jar /root/erick/code-example-1.0-SNAPSHOT.jar &
+nohup java -jar /opt/erick/*.jar &
 
 # 执行上面指令，会卡住，按回车才会退出，并把日志输出到nohup.out中
 # 会在执行该指令的目录下，创建一个新的日志文件 nohup.out
 nohup: ignoring input and appending output to 'nohup.out'
 
-
-## 3. 杀死进程
-# jps 查看java进程： 第一个是实际运行的java的项目，第二个是jps查询时候的进程
-3552 Jps
-3538 code-example-1.0-SNAPSHOT.jar
-
-# 杀死进程
-kill -9 3538
+# 3. 后台启动，输出日志到指定目录，就不需要按回车
+nohup java -jar /opt/erick/*.jar  >service.log 2>&1 &
 ```
 
-### Jenkins中执行
+#### Jenkins执行
 
 ```bash
-# 如果通过下面指令在 Jenkins中执行
-# 因为要回车，所以Jenkins会认为任务还在执行， 就会任务一直没完成，最终导致任务超时
-nohup java -jar /root/erick/*.jar &   
+# 指定文件输出日志，不然需要按enter，所以Jenkins会认为任务还在执行， 就会任务一直没完成，最终导致任务超时
+nohup java -jar /opt/erick/*.jar  >service.log 2>&1 &
 
-# 指定日志文件写入，就不会卡住，
-nohup java -jar /root/erick/*.jar  >code-example.log 2>&1 &
-
-#  对应的脚本： 必须加上上面一行，否则shell命令不会执行，可能是获得权限: . /etc/profile 
+#  对应的脚本： 必须加上上面一行，否则shell命令不会执行
 . /etc/profile 
-nohup java -jar /root/erick/*.jar  >code-example.log 2>&1 &
+nohup java -jar /opt/erick/*.jar  >service.log 2>&1 &
 ```
 
-## ![image-20221023140018841](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20221023140018841.png)运行前清理
+![image-20250121001113225](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250121001113225.png)
 
-- 通过shell脚本启动的服务，要先杀死掉之前的应用，再启动新的应用，否则就会引发端口冲突问题
+## Pre Steps
 
-###  控制台查看进程
+- 先杀死掉之前的应用，再启动新的应用，否则就引发端口冲突问题
 
-```bash
-# 1.查看java进程
-ps -ef | grep code-example-1.0-SNAPSHOT
+### 清理脚本
 
-# 包含两个进程： 一个是运行的account对应的java进程， 一个是用jps查看的进程
-root     26599     1  6 13:59 ?        00:00:08 java -jar /root/erick/code-example-1.0-SNAPSHOT.jar
-root     26688 24420  0 14:02 pts/0    00:00:00 grep --color=auto code-example-1.0-SNAPSHOT
-
-# 2. 两种过滤手段
-# 2.1 过滤掉grep的进程: -v代表过滤
-ps -ef | grep code-example | grep -v grep
-# 2.2  筛选出java和account的进程
-ps -ef | grep code-example | grep 'java -jar'
-
-root     26599     1  4 13:59 ?        00:00:08 java -jar /root/erick/code-example-1.0-SNAPSHOT.jar
-
-# 3. 获取端口： awk， 可以将对应的第二个字符获取，也就是30634， 游标是从1开始
-ps -ef | grep code-example | grep 'java -jar' | awk '{printf $2}'
-
-3659[root@dayDreamer erick]#
-```
-
-### Shell脚本入门
+- 在jar包运行服务器上，创建好清理脚本
 
 ```bash
-# 在/root/erick下创建 clear.sh
+# 在/opt/erick下创建 clear.sh
 touch clear.sh
 
-#  编写对应的脚本，授权 测试
+#  编写对应的脚本，授权
 chmod 777 clear.sh
-./clear.sh 
 ```
 
 ```bash
-# 一般都会写，不写也可以
-#!/bin/bash
-
-# 将一个信息，输出到对应的文本中
-echo "hello word">1.txt
-```
-
-```bash
+# optional
 #!/bin/bash
 # delete jar files
 rm -rf *.jar
@@ -325,247 +287,225 @@ if [ -z $pid ];
 fi
 ```
 
-### Jenkins触发-Pre Steps
+### Jenkins配置
 
 - 在构建Jar包之前，传输文件之前，先去执行的操作
-- 也是通过Publish Over SSH插件来完成
+- 通过Publish Over SSH插件来完成
+
+![image-20250121003631335](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250121003631335.png)
 
 ```bash
 ./etc/profile
-cd /root/erick                # 需要先进入到这个目录，才能删除对应下面的文件， 但是其中的ps进程不进入也是可以的
-./clear.sh code-example       # code-example是传入的项目名称
+cd /opt/erick                      # 需要先进入到这个目录，才能删除对应下面的文件， 但是其中的ps进程不进入也是可以的
+./clear.sh replay-service-api       # replay-service-api 是传入的项目名称
 ```
 
-![image-20221023141556065](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20221023141556065.png)
+![image-20250121003823552](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250121003823552.png)
+
+# 微服务-Docker
+
+- dev环境安装Docker
+
+## Post Steps
+
+- Dockerfile发送和构建
+
+### 1. 发送文件
+
+- 按照上面方式发送Jar文件
+- 在发送Dockerfile文件，保证两个文件在同一个目录下
+
+![image-20250121012013812](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250121012013812.png)
+
+### 2. 启动服务
+
+```bash
+. /etc/profile 
+cd /opt/erick
+docker build -t replay-service-api:1.0.0.snapshot .
+docker run --name myservice -d -p 8080:8080 replay-service-api:1.0.0.snapshot
+```
+
+![image-20250121013623144](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250121013623144.png)
+
+## Pre-Step
+
+```bash
+. /etc/profile 
+cd /opt/erick 
+rm -rf *                            
+docker rm -f myservice             
+docker rmi replay-service-api:1.0.0.snapshot       
+```
+
+![image-20250121014414578](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250121014414578.png)
 
 # Pipeline
 
-## 简介
-
 - 使用Pipeline， 可以将上面所有的UI操作，转换为代码，就像docker的dockerfile一样
-- Jenkinsfile一般作为源代码提交到git仓库
+- Jenkinsfile作为源代码提交到git仓库
 
 ```bash
 # pipeline组成
 - pipeline： 整条流水线
-- agent： 指定执行器
+- agent： 指定执行的哪个jenkins node
 - stages： 所有阶段
 - stage： 某一阶段，可以有多个
 - steps： 阶段内的每一步，可执行命令
 ```
 
-## 基本构建
+## 项目构建
 
-### Pipeline
+### 1. Pipeline
 
-![image-20220904142742980](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20220904142742980.png)
+![image-20250121130733834](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250121130733834.png)
 
-### 脚本直接构建
+### 2. 脚本构建
 
-- 可以通过直接在consule里面写pipeline的脚本
+- 可直接在console里面写pipeline的脚本
+- 需要勾选Use Groovy Sandbox，否则该脚本执行时会有Jenkins的安全验证问题
+
+![image-20250121134930557](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250121134930557.png)
 
 ```bash
-# 可以从外面定义一些常量
+// 可以在外面定义变量
 pipeline {
-    # 具体交给哪个Jenkins节点执行， any表示由Jenkins自主分配
+    // 任意使用一个agent
     agent any
-    
+ 
+    // 定义多个步骤
     stages {
-     # 环节中的一个环节
-        stage('get code from git') {
-            # 其中的一个步骤
+        stage('pull code') {
             steps {
-                echo 'code get successfully'
+                echo 'pull code starting'
             }
         }
-        stage('execute build') {
+
+        stage('build jar') {
             steps {
-                echo 'build successfully'
+                echo 'build jar starting'
             }
-        }        
+        }
     }
 }
 ```
 
-- 可以看到每个步骤的执行时间，每个步骤的对应的log等
-- 可以对指定的stage运行，比去拉取代码拉取到了，就不需要再执行了
+### 3. 脚本批准
 
-![image-20220904143654963](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20220904143654963.png)
+![image-20250121134852898](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250121134852898.png)
 
-![image-20220904143905809](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20220904143905809.png)
+### 4. 启动
 
-![image-20220904144026077](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20220904144026077.png)
+- 先安装插件
 
-### Blue Ocean
+![image-20250121145549989](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250121145549989.png)
 
-- 提供了一个更加漂亮的Pipeline构建的Web界面
+![image-20250121145759667](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250121145759667.png)
+
+### 5. Blue Ocean
+
 - 安装Blue Ocean 插件
 
-![image-20220904144238599](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20220904144238599.png)
+![image-20250121135643902](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250121135643902.png)
 
-![image-20220904144441227](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20220904144441227.png)
+## 脚本构建
 
-## Pipeline脚本构建
-
-### 代码生成器
+### 1. 代码生成器
 
 - 下拉选项，是根据装的插件来决定的， 使用Pipeline Syntax来快速生成代码
 
-![image-20220904144856154](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20220904144856154.png)
+![image-20250121140500571](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250121140500571.png)
 
 ![image-20220904144911431](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20220904144911431.png)
 
-### 代码拉取
+### 2. 代码拉取
 
 - 利用代码生成器生成
 
 ```bash
 # 对应的pipeline的脚本
-git branch: 'main', url: 'https://gitee.com/daydreamer9451/nike-shoe.git'
+git branch: 'main', url: 'https://gitee.com/daydreamer9451/replay-service.git'
 ```
 
-![image-20220904145125543](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20220904145125543.png)
+![image-20250121140738990](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250121140738990.png)
 
-### Maven构建
+### 3. Maven构建
+
+- clear之前的版本
+
+![image-20250121142839558](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250121142839558.png)
+
+```bash
+# 目录结构问题：
+- Maven build的时候，默认是去/root/.jenkins/workspace/replay-service-pipeline找的
+  因此要去执行的时候，必须先进入到cd replay-service-pipeline找到对应的pom文件
+```
+
+### 4. SSH-Pubish
+
+- 发送测试服务器，启动服务，前期清理工作
+
+### 5. 最终脚本
 
 ```bash
 pipeline {
     agent any
 
-   # 定义maven配置的名字，具体要用哪个maven，在jenkins中已经声明过
+    // 定义maven配置的名字，具体使用哪个Maven，在Jenkins中已经配置过了
     tools {
-        maven "Linux-Maven-Jenkins"
+        maven 'Linux-local-maven'
     }
-    
+
     stages {
-        stage('Archive Source Code') {
+        stage('Pull Source Code') {
             steps {
-               git branch: 'main', url: 'https://gitee.com/daydreamer9451/nike-shoe.git'
-               echo "code pull finished"
+                git branch: 'main', url: 'https://gitee.com/daydreamer9451/replay-service.git'
+                echo 'Pull Code successfully'
             }
         }
-        
+
+        stage('Clean Jar and Stop the service'){
+             steps {
+                       sshPublisher(publishers: [sshPublisherDesc(configName: 'DEV-SERVER', transfers: [sshTransfer(cleanRemote: false, excludes: '', execCommand: '''./etc/profile
+                        cd /opt/erick
+                        ./clear.sh replay-service-api''', execTimeout: 120000, flatten: false, makeEmptyDirs: false, noDefaultExcludes: false, patternSeparator: '[, ]+', remoteDirectory: '', remoteDirectorySDF: false, removePrefix: '', sourceFiles: '')], usePromotionTimestamp: false, useWorkspaceInPromotion: false, verbose: false)])
+
+             }
+        }
+
         stage('Build Jar By Maven') {
             steps {
+              // 运行多行指令
                sh """
-               cd code-example
-               mvn clean package
+               cd replay-service-api
+               mvn clean
+               mvn package
                """
             }
-        }        
-    }
-}
-```
-
-```bash
-# 目录结构问题：
-1. Maven build的时候，默认是去/root/.jenkins/workspace/code-example-pipeline找的
-  因此要去执行的时候，必须先进入到cd code-example找到对应的pom文件
-```
-
-### SSH-Pubish
-
-- 发送测试服务器，启动服务，前期清理工作
-- 根据之前发送jar包的方式，在web界面操作，通过代码生成器帮我们来做
-
-### 最终脚本
-
-```bash
-
-  pipeline {
-    agent any
-
-    tools {
-        maven "Linux-Maven-Jenkins"
-    }
-    
-    stages {
-        stage('Get Source Code') {
-            steps {
-               git branch: 'develop', url: 'https://gitee.com/daydreamer9451/erick-code-example.git'
-               echo "code pull finished"
-            }
         }
-        
-        stage('Build Jar By Maven') {
-            steps {
-               sh """
-               cd code-example
-               mvn clean package
-               """
-            }
-        }     
-        
-        stage('Clean Job'){
-            steps{
-                sshPublisher(publishers: [sshPublisherDesc(configName: 'dev-env', transfers: [sshTransfer(cleanRemote: false, excludes: '', execCommand: '''./etc/profile
-cd /root/erick               
-./clear.sh code-example      ''', execTimeout: 120000, flatten: false, makeEmptyDirs: false, noDefaultExcludes: false, patternSeparator: '[, ]+', remoteDirectory: '', remoteDirectorySDF: false, removePrefix: '', sourceFiles: '')], usePromotionTimestamp: false, useWorkspaceInPromotion: false, verbose: false)])
-                
-            }
+
+        stage('Send Jar to DEV-SERVER'){
+           steps {
+               sshPublisher(publishers: [sshPublisherDesc(configName: 'DEV-SERVER', transfers: [sshTransfer(cleanRemote: false, excludes: '', execCommand: '', execTimeout: 120000, flatten: false, makeEmptyDirs: false, noDefaultExcludes: false, patternSeparator: '[, ]+', remoteDirectory: 'erick', remoteDirectorySDF: false, removePrefix: 'replay-service-api/target', sourceFiles: '**/replay-service-api*.jar')], usePromotionTimestamp: false, useWorkspaceInPromotion: false, verbose: false)])
+           }
         }
-        
-        stage('Send Jar File'){
+
+        stage('Start Service in DEV-SERVER'){
             steps {
-                sshPublisher(publishers: [sshPublisherDesc(configName: 'dev-env', transfers: [sshTransfer(cleanRemote: false, excludes: '', execCommand: '', execTimeout: 120000, flatten: false, makeEmptyDirs: false, noDefaultExcludes: false, patternSeparator: '[, ]+', remoteDirectory: '', remoteDirectorySDF: false, removePrefix: 'code-example/target', sourceFiles: '**/code-example*.jar')], usePromotionTimestamp: false, useWorkspaceInPromotion: false, verbose: false)])
-            }
-        }
-        
-        stage('Start Project'){
-            steps{
-                sshPublisher(publishers: [sshPublisherDesc(configName: 'dev-env', transfers: [sshTransfer(cleanRemote: false, excludes: '', execCommand: '''. /etc/profile 
-nohup java -jar /root/erick/*.jar  >code-example.log 2>&1 &''', execTimeout: 120000, flatten: false, makeEmptyDirs: false, noDefaultExcludes: false, patternSeparator: '[, ]+', remoteDirectory: '', remoteDirectorySDF: false, removePrefix: '', sourceFiles: '')], usePromotionTimestamp: false, useWorkspaceInPromotion: false, verbose: false)])
+                sshPublisher(publishers: [sshPublisherDesc(configName: 'DEV-SERVER', transfers: [sshTransfer(cleanRemote: false, excludes: '', execCommand: '''. /etc/profile
+                       nohup java -jar /opt/erick/*.jar  >service.log 2>&1 &''', execTimeout: 120000, flatten: false, makeEmptyDirs: false, noDefaultExcludes: false, patternSeparator: '[, ]+', remoteDirectory: '', remoteDirectorySDF: false, removePrefix: '', sourceFiles: '')], usePromotionTimestamp: false, useWorkspaceInPromotion: false, verbose: false)])
             }
         }
     }
 }
 ```
 
-![image-20221023145403519](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20221023145403519.png)
-
-## Pipeline-Jenkinsfile构建
+## Jenkinsfile构建
 
 - 在代码中创建Jenkinsfile文件，上面的脚本都写在里面
+- 是使用Grovvy语法编写的脚本语言
 
-![image-20220904155828617](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20220904155828617.png)
+![image-20250121150659204](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250121150659204.png)
 
-![image-20221023150430142](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20221023150430142.png)
+![image-20250121150714118](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250121150714118.png)
 
-# 发布Docker
-
-## 1. DEV-环境
-
-- 安装Docker环境
-
-## 2. Jenkins
-
-### 2.1  构建前清理工作
-
-```bash
-. /etc/profile 
-rm -rf *                             # 删除account下的jar包和dockerfile
-docker stop nike-shoe             # 停止容器
-docker rm nike-shoe             # 删除容器
-docker rmi nike-shoe-image        # 删除image
-
-. /etc/profile 
-rm -rf *  
-docker stop nike-shoe             
-docker rm nike-shoe             
-docker rmi nike-shoe-image       
-```
-
-![image-20220903222550119](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20220903222550119.png)
-
-### 2.2 构建工作
-
-Dockerfile发送和构建
-
-```bash
-# 在同一个发送Jar包的SSH下面，发送Dockerfile， 并构建镜像，然后启动
-. /etc/profile 
-docker build -t nike-shoe-image .
-docker run --name nike-shoe -d -p 9000:9000 nike-shoe-image
-```
-
-![image-20220904002326567](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20220904002326567.png)

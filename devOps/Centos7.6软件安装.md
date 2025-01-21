@@ -953,12 +953,3 @@ under the License.
 </settings>
 ```
 
-#  Git安装
-
-```bash
-yum install git
-
-git --version
-
-git version 1.8.3.1
-```
