@@ -76,7 +76,7 @@ yum -y install gcc-c++
 # 安装yum-utils
 sudo yum install -y yum-utils
 
-# 设置稳定仓库
+# 设置稳定仓库: 告诉yum源，去哪里下载docker这个软件 
 yum-config-manager --add-repo http://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
 
 # 重建yum索引
@@ -110,10 +110,14 @@ docker info
 ### 镜像配置
 
 - docker镜像默认从海外拉取
+- 有些版本的docker，必须先启动以后，才会有docker这个目录
 
 ```bash
-vim /etc/docker/daemon.json
-# 多配置几个镜像源，希望总有能用的
+# 配置镜像地址，
+# 配置cggroup，对后面用k8s安装很重要
+
+sudo mkdir -p /etc/docker
+sudo tee /etc/docker/daemon.json <<-'EOF'
 {
   "registry-mirrors": [
     "https://registry.docker-cn.com",
@@ -126,8 +130,19 @@ vim /etc/docker/daemon.json
     "https://noohub.ru", 
     "https://huecker.io",
     "https://dockerhub.timeweb.cloud" 
-  ]
+  ],
+  "exec-opts": ["native.cgroupdriver=systemd"],
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "100m"
+  },
+  "storage-driver": "overlay2"
 }
+EOF
+
+# 重启docker
+sudo systemctl daemon-reload
+sudo systemctl restart docker
 
 # 重启docker
 # 测试
