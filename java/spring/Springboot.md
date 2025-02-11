@@ -1589,3 +1589,71 @@ public class TaobaoConfig {
     }
 }
 ```
+
+# 案例进阶
+
+## 文件读取
+
+- 从resource目录下读取文件，需要能够在本地运行，打成jar包后也能运行
+- 读取json文件，得到对应的json的字符串
+
+### ClassPathResource
+
+- spring提供的一个工具
+
+```java
+package com.citi.replay.controller;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.ClassPathResource;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
+@Slf4j
+public class LoadFile {
+
+    /*文件目录在resources下*/
+    public String loadFile() throws IOException {
+        ClassPathResource resource = new ClassPathResource("scripts/erick.json");
+        String fileContent = new String(Files.readAllBytes(Paths.get(resource.getURI())));
+        log.info("fileContent={}", fileContent);
+        return fileContent;
+    }
+}
+```
+
+### ResourceLoader
+
+- spring提供的一个工具
+
+```java
+package com.citi.replay.controller;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
+import org.springframework.stereotype.Service;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
+@Slf4j
+@Service
+public class LoadFileService {
+
+    @Autowired
+    private ResourceLoader resourceLoader;
+
+    public String readFiles() throws IOException {
+        Resource resource = resourceLoader.getResource("classpath:scripts/erick.json");
+        String fileContent = new String(Files.readAllBytes(Paths.get(resource.getURI())));
+        log.info("fileContent={}", fileContent);
+        return fileContent;
+    }
+}
+```
+
