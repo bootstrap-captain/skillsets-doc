@@ -1590,7 +1590,7 @@ public class TaobaoConfig {
 }
 ```
 
-# 案例进阶
+# Best Practices 
 
 ## 文件读取
 
@@ -1657,3 +1657,81 @@ public class LoadFileService {
 }
 ```
 
+## 项目启动后执行某个方法
+
+- 一般使用CommandLineRunner接口和ApplicationRunner接口较多
+
+### @PostConstruct
+
+- 所在的类必须放在容器中
+- 初始化该容器的时候，会触发
+
+```java
+package com.citi.replay.controller;
+
+
+import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+
+@Slf4j
+@Component
+public class InitService {
+    @PostConstruct
+    public void init() {
+        log.info("=====================================");
+    }
+}
+```
+
+![image-20250211170145588](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250211170145588.png)
+
+### CommandLineRunner接口
+
+- 接口提供了一个`run`方法，这个方法会在Spring Application的上下文加载完成后立即执行
+- 在应用启动时执行一些数据库迁移、初始化数据等操作非常有用
+- 必须放在容器中
+
+```java
+package com.citi.replay.controller;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
+
+@Component
+@Slf4j
+public class LoadService implements CommandLineRunner {
+    @Override
+    public void run(String... args) throws Exception {
+       log.info("CommandLineRunner=============================CommandLineRunner");
+    }
+}
+```
+
+![image-20250211170448702](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250211170448702.png)
+
+### ApplicationRunner接口
+
+- 必须放在容器中
+- 项目完全启动后执行的动作
+
+```java
+package com.citi.replay.controller;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.ApplicationArguments;
+import org.springframework.boot.ApplicationRunner;
+import org.springframework.stereotype.Component;
+
+@Component
+@Slf4j
+public class LoadSecondService implements ApplicationRunner {
+    @Override
+    public void run(ApplicationArguments args) throws Exception {
+        log.info("ApplicationRunner===========================ApplicationRunner");
+    }
+}
+```
+
+![image-20250211170728306](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250211170728306.png)
