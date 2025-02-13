@@ -489,6 +489,25 @@ BITCOUNT key [start end]
 
 ![image-20230329114721111](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20230329114721111.png)
 
+```bash
+# 1. Redis内部函数
+redis.call('命令名称','key','其他参数', ......)
+
+# 2. 执行脚本 EVAL "redis.call()"
+# 无参数， 0代表脚本的key的参数个数
+EVAL "return redis.call('set','name','erick')" 0
+
+# 3. 带参数
+EVAL "return redis.call('set',KEYS[1],ARGV[1])" 1 age 20
+KEYS[1]:  redis的key值个数
+ARGV[1]:  redis的value的值个数
+1:        具体包含几个key
+age：     实际传递的key值
+20:       实际传递的value值
+```
+
+
+
 # 缓存问题
 
 ## 1. 缓存穿透
