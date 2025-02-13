@@ -1,3 +1,69 @@
+# Redis-7.4.0
+
+- Centos 7.6
+
+## 安装包
+
+- [官网下载](https://redis.io/download)
+- [版本地址](https://download.redis.io/releases/)
+
+```bash
+# 1. 上传解压
+put /Users/shuzhan/Desktop/redis-7.4.0.tar.gz /opt
+tar -zxvf redis-7.4.0.tar.gz
+
+# 2. 安装
+cd redis-7.4.0
+make && make install
+# Hint: It's a good idea to run 'make test' ;)  表示安装成功
+
+# 3. 最终安装位置 ： /usr/local/bin/
+cd /usr/local/bin/
+ll
+
+redis-benchmark                               # 性能测试工具
+redis-check-aof -> redis-server               # 修复有问题的aof
+redis-check-rdb -> redis-server               # 修复有问题的rdb
+redis-cli                                     # 客户端，操作入口
+redis-sentinel -> redis-server                # redis集群使用
+redis-server                                  # redis服务器启动命令
+
+# 4. 自定义配置文件
+mkdir -p opt/redisConf
+cd /opt/redis-7.4.0
+cp redis.conf /opt/redisConf/redis.conf         # 使用该配置文件作为启动
+
+bind 127.0.0.1 -::1            # 默认只能本地cli访问。注释掉该行，或者改成本机IP
+protected-mode no              # 默认yes，开启保护模式，限制为本地访问
+daemonize yes                  # 守护进程，默认no，改为yes
+databases 5                    # 默认为16，数据库个数
+requirepass erick_123456@      # 添加密码
+```
+
+```bash
+# 1. 启动服务
+# 在任意目录下，通过配置文件启动服务。 redis-server是一个系统级别的指令
+cd /opt/redisConf
+redis-server redis.conf
+
+# 2. 查看是否启动成功
+ps -ef|grep redis|grep -v grep            # 验证是否成功
+root     30425     1  0 13:26 ?        00:00:00 redis-server *:6379
+
+redis-server -v                          # 查看redis版本
+Redis server v=7.4.0 sha=00000000:0 malloc=jemalloc-5.3.0 bits=64 build=d9a14e1c2f414f31
+
+redis-cli                # 打开一个redis client
+auth erick_123456@       # 输入密码
+ping                     # 验证是否链接成功
+
+# 3. 用IDEA配置的用户名和密码进行登录
+username: default
+password: erick_123456@  
+```
+
+## Docker
+
 # 入门简介
 
 ## 1. 简介
