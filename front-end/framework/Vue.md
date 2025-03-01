@@ -340,6 +340,45 @@ function updateInfo() {
 </style>
 ```
 
+## toRefs
+
+- 对于解构赋值出来的数据，也做成响应式的，原数据必须是reactive
+
+```vue
+<script setup lang="ts">
+import {reactive, toRefs} from "vue";
+import type {Student} from "@/component/entity.ts";
+
+let data = reactive<Student>({
+  name: 'erick',
+  address: "xian",
+});
+
+/*解构赋值出来的数据，必须加toRef才能变成响应式*/
+let {name, address} = toRefs(data);
+
+function updateName() {
+  data.address += '~';
+}
+
+function updateAddress() {
+  data.name += '~';
+}
+</script>
+
+<template>
+  <div>{{ data.address }}======{{ data.name }}</div>
+  <div>{{ name }}$$$$$$$$${{ address }}</div>
+  <button @click="updateAddress">更新地址</button>
+  <button @click="updateName">更新姓名</button>
+</template>
+
+<style scoped>
+</style>
+```
+
+
+
 # Computed属性
 
 - 计算属性的数据，只要他依赖的数据发生变化，计算属性就会变化
@@ -693,45 +732,33 @@ function check() {
 </style>
 ```
 
+# 组件通信
 
+## Props
 
-# Props
+### 父-->子
 
-- 父组件给子组件传递数据
+- 父传递给子，属性必须是非函数
+
+#### 父
 
 ```vue
-<script lang="ts">
-export default {
-  name: "Dog",
+<script setup lang="ts">
+import type {People} from "@/entity/entity.ts";
+import Son from "@/components/Son.vue";
+
+let people: People = {
+  id: 123,
+  name: '父亲',
+  address: '北京'
 }
 </script>
 
-<script setup lang="ts">
-
-
-import "@/components/Dog.vue";
-import type {People} from "@/entity/entity.ts";
-
-/*定义数据
-* 类型，必要性，默认值*/
-withDefaults(defineProps<{ people?: People, pageSize?: number, isActive?: boolean, gender?: string }>(), {
-  people: () => {
-    return {
-      name: 'Lucy',
-      age: 18,
-    }
-  },
-  pageSize: 10,
-  isActive: false,
-  gender: 'default'
-})
-</script>
-
 <template>
-  <div>people：{{ people }}</div>
-  <div>pageSize：{{ pageSize }}</div>
-  <div>isActive：{{ isActive }}</div>
-  <div>gender：{{ gender }}</div>
+  <div>我是父亲{{ people }}</div>
+  <!--1.    :   表示绑定的是变量，数字，boolean值
+         不加:   当作字符串解析-->
+  <Son :people="people" :pageSize="10" gender="male" :flag="true"/>
 </template>
 
 <style scoped>
@@ -739,27 +766,493 @@ withDefaults(defineProps<{ people?: People, pageSize?: number, isActive?: boolea
 </style>
 ```
 
+#### 子
+
+- 不加任何限制的
+
 ```vue
 <script setup lang="ts">
-import Dog from "@/components/Dog.vue";
+
+/*定义接受数据的名称，没任何限制*/
+defineProps(['people', 'pageSize', 'flag', 'gender']);
+</script>
+
+<template>
+  <div>儿子{{ people }}{{ pageSize }}{{ flag }}{{ gender }}</div>
+</template>
+
+<style scoped>
+
+</style>
+```
+
+- 定义接受数据类型
+
+```vue
+<script setup lang="ts">
+
+import type {People} from "@/entity/entity.ts";
+
+/*定义接受数据的类型*/
+defineProps<{ people: People, pageSize: number, flag: boolean, gender: string }>();
+</script>
+
+<template>
+  <div>儿子{{ people }}{{ pageSize }}{{ flag }}{{ gender }}</div>
+</template>
+
+<style scoped>
+
+</style>
+```
+
+- 定义数据类型，是否比选，默认值
+
+```vue
+<script setup lang="ts">
+import type {People} from "@/entity/entity.ts";
+
+/*定义接收的数据类型*/
+withDefaults(defineProps<{
+      people?: People,
+      pageSize?: number,
+      flag: boolean,
+      gender?: string
+    }>(),
+    {
+      people: () => {
+        return {
+          id: 999,
+          name: 'default',
+          address: 'default',
+        }
+      },
+      pageSize: 100,
+      gender: "default"
+    })
+</script>
+
+<template>
+  <div>儿子{{ people }}{{ pageSize }}{{ flag }}{{ gender }}</div>
+</template>
+
+<style scoped>
+
+</style>
+```
+
+### 子-->父
+
+- 子传递数据给父，属性值必须是函数
+
+#### 子
+
+```vue
+<script setup lang="ts">
+
 import type {People} from "@/entity/entity.ts";
 
 let people: People = {
-  name: "张合适",
-  age: 12,
+  id: 999,
+  name: 'Lucy',
+  address: 'Beijing'
+}
+
+defineProps<
+    /*定义数据类型为函数*/
+    {
+      sendPeople: (name: string, people: People) => void
+    }
+>();
+
+</script>
+
+<template>
+  <!--调用方式一-->
+  <button @click="sendPeople('张三',people)">调用</button>
+</template>
+
+<style scoped>
+
+</style>
+```
+
+#### 父
+
+```vue
+<script setup lang="ts">
+import Son from "@/components/Son.vue";
+import type {People} from "@/entity/entity.ts";
+
+function getPeople(val: string, people: People) {
+  console.log('父接受到数据了');
+  console.log(val);
+  console.log(people);
+}
+</script>
+
+<template>
+  <Son :sendPeople="getPeople"/>
+</template>
+
+<style scoped>
+
+</style>
+```
+
+## 自定义事件
+
+- 典型的子传递父
+
+### 子
+
+```vue
+<script setup lang="ts">
+
+import type {Dog, People} from "@/entity/entity.ts";
+import {onMounted} from "vue";
+
+let people: People = {
+  id: 999,
+  name: 'Lucy',
+  address: 'Beijing'
+}
+
+let dog: Dog = {
+  brand: '博美',
+  address: '南京'
+}
+
+let gender = 'male';
+
+/*自定义多个事件
+* e:事件名字
+* 其他参数：参数类型*/
+const emit = defineEmits<{
+  (e: 'send-people', gender: string, people: People): void
+  (e: 'send-dog', dog: Dog): void
+}>();
+
+/*触发方式一：组件挂载后触发一次*/
+onMounted(() => {
+  setTimeout(() => {
+    emit("send-people", gender, people);
+  }, 3000);
+})
+
+</script>
+
+<template>
+  <!--触发方式二:点击调用一-->
+  <button @click="emit('send-dog',dog)">子组件按钮</button>
+</template>
+
+<style scoped>
+
+</style>
+```
+
+### 父
+
+```vue
+<script setup lang="ts">
+import Son from "@/components/Son.vue";
+import type {Dog, People} from "@/entity/entity.ts";
+
+function getPeople(gender: string, people: People) {
+  console.log('被触发了', gender, people);
+}
+
+function getDog(dog: Dog) {
+  console.log(dog)
 }
 
 </script>
 
 <template>
-  <!-- 1.     : 表示绑定的是变量，数字，
-       2.      不加： ,绑定的是字符串-->
-  <Dog :people="people" :page-size="20" :is-active="true" gender="male"/>
+  <Son @send-people="getPeople" @send-dog="getDog"/>
 </template>
 
-<style>
+<style scoped>
+
 </style>
 ```
+
+## MITT
+
+- 第三方的，用于所有组件互相通信的一种事件机制
+
+```bash
+npm i mitt
+```
+
+### 组件声明
+
+```ts
+import mitt from 'mitt';
+
+let emitter = mitt();
+
+export default emitter;
+```
+
+### 事件发布方
+
+```vue
+<script setup lang="ts">
+import emitter from "@/util/emitter.ts";
+import type {People} from "@/entity/entity.ts";
+
+let people: People = {
+  id: 999,
+  name: 'Lucy',
+  address: 'Beijing'
+}
+
+function triggerEvent(people: People) {
+  /*触发事件
+  * 1. 参数一：事件名
+  * 2. 参数二：事件参数*/
+  emitter.emit('people-event', people);
+}
+
+</script>
+
+<template>
+  <button @click="triggerEvent(people)">发送数据</button>
+</template>
+
+<style scoped>
+
+</style>
+```
+
+### 事件接收方
+
+```vue
+<script setup lang="ts">
+
+import emitter from "@/util/emitter.ts";
+import {onUnmounted} from "vue";
+
+/*订阅事件*/
+emitter.on('people-event', (value) => {
+  console.log('接受到的事件：', value)
+})
+
+/*页面卸载时，最好能取消当前订阅*/
+onUnmounted(() => {
+  emitter.off('people-event')
+})
+
+</script>
+
+<template>
+
+</template>
+
+<style scoped>
+
+</style>
+```
+
+## provide-inject
+
+- 父组件，跨层给后代所有组件传递参数
+- 父组件声明哪些参数需要传递，后代组件各取所需
+
+### 父
+
+```vue
+<script setup lang="ts">
+import Son from "@/components/Son.vue";
+import type {People} from "@/entity/entity.ts";
+import {provide, ref} from "vue";
+
+/*响应式数据*/
+let people = ref<People>({
+  id: 123,
+  name: 'Father',
+  address: '南京'
+});
+
+let gender = ref<string>('男');
+
+function updateGender(): void {
+  gender.value += '~';
+}
+
+provide<People>('k-people', people);
+provide<string>('k-gender', gender);
+
+</script>
+
+<template>
+  <div>父组件{{ people }}{{ gender }}</div>
+  <button @click="updateGender">父组件更新</button>
+  <Son/>
+</template>
+
+<style scoped>
+
+</style>
+```
+
+### 子
+
+```vue
+<script setup lang="ts">
+import {inject} from "vue";
+import type {People} from "@/entity/entity.ts";
+
+let people = inject<People>('k-people');
+let gender = inject<string>('k-gender');
+</script>
+
+<template>
+  <div>子组件{{ people.address }}{{ gender }}</div>
+</template>
+
+<style scoped>
+
+</style>
+```
+
+## Slot
+
+### 默认slot
+
+- 声明子组件时，可以使用双标签，并在标签中携带内容
+
+#### 父
+
+```vue
+<script setup lang="ts">
+import Son from "@/components/Son.vue";
+</script>
+
+<template>
+  <!--son中的内容，就是slot-->
+  <Son>
+    <h2>哈哈哈哈哈哈</h2>
+  </Son>
+</template>
+
+<style scoped>
+
+</style>
+```
+
+#### 子
+
+- 通过插槽进行占位
+
+```vue
+<script setup lang="ts">
+
+</script>
+
+<!--渲染子组件时，可以通过slot获取到其中的内容，并且可以定义默认值-->
+<template>
+  <div>start</div>
+  <slot>默认值</slot>
+  <div>end</div>
+</template>
+
+<style scoped>
+
+</style>
+```
+
+### 具名slot
+
+- 最好可以借助到template
+
+#### 父
+
+```vue
+<script setup lang="ts">
+import Son from "@/components/Son.vue";
+</script>
+
+<template>
+  <Son>
+    <template v-slot:s2>
+      <h2>哈哈哈哈哈哈哈</h2>
+    </template>
+
+    <!--语法糖-->
+    <template #s1>
+      <h2>嘿嘿嘿嘿嘿嘿嘿嘿</h2>
+    </template>
+  </Son>
+</template>
+```
+
+#### 子
+
+```vue
+<script setup lang="ts">
+
+</script>
+
+<template>
+  <slot name="s1">默认值----s1</slot>
+  <div>start</div>
+  <slot name="s2">默认值----s2</slot>
+  <div>end</div>
+</template>
+```
+
+### 作用域slot
+
+- 数据在子组件中，但是数据的渲染方式却是需要父来决定
+
+#### 子
+
+```vue
+<script setup lang="ts">
+
+import {ref} from "vue";
+
+let address = ref<string>('ERICK');
+let age = ref<number>(0);
+
+</script>
+
+<template>
+  <!--将子组件的数据传输到父组件中-->
+  <slot :addressParam=address :ageParam=age></slot>
+  <div>start</div>
+  <div>end</div>
+</template>
+```
+
+#### 父
+
+```vue
+<script setup lang="ts">
+import Son from "@/components/Son.vue";
+</script>
+
+<template>
+  <!--父组件通过 v-slot拿到对应的子组件的数据，进行个性化渲染-->
+  <Son>
+    <template v-slot="erickParams">
+      <h1>{{ erickParams.ageParam }}{{ erickParams.addressParam }}</h1>
+    </template>
+  </Son>
+
+  <Son>
+    <template v-slot="erickParams">
+      <h3>{{ erickParams.ageParam }}{{ erickParams.addressParam }}</h3>
+    </template>
+  </Son>
+
+</template>
+```
+
+
 
 # 生命周期
 
@@ -845,7 +1338,512 @@ let flag = ref<boolean>(true);
 </style>
 ```
 
-# 自定义Hooks
+# Pinia
+
+- 集中式状态管理： 状态管理的工具，对应Vue2之前的Vuex
+- [官网](https://pinia.web3doc.top/)
+- 在创建项目的时候就指定需要使用
+
+```bash
+ "pinia": "^3.0.1",
+```
+
+## 基本结构
+
+### main.ts
+
+```ts
+import { createApp } from 'vue'
+import { createPinia } from 'pinia'
+import App from './App.vue'
+
+const app = createApp(App)
+
+/*引入了pinia*/
+app.use(createPinia())
+
+app.mount('#app')
+```
+
+![image-20250224203033209](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250224203033209.png)
+
+### counter.ts
+
+```ts
+import {ref} from 'vue'
+import {defineStore} from 'pinia'
+import type {People} from "@/entity/entity.ts";
+
+export const useCounterStore = defineStore('counter', () => {
+
+    /*state属性*/
+    let sum = ref<number>(666);
+
+    let people = ref<People>({
+        id: 1,
+        name: '张三',
+        address: '西安'
+    })
+
+    return {sum, people}
+})
+```
+
+## 读取数据
+
+- 可以有两种方式进行读取数据
+
+```vue
+<script setup lang="ts">
+
+import {useCounterStore} from "@/stores/counter.ts";
+
+/*获取到对应的状态
+* 1. 一个reactive包裹的对象*/
+let counterStore = useCounterStore();
+
+/* 2. 获取数据的方式*/
+/*2.1: 直接获取*/
+console.log("read-data-001", counterStore.sum, counterStore.people);
+
+/*2.2：从$state中去解析*/
+console.log("read-data-002", counterStore.$state.sum, counterStore.$state.people);
+
+</script>
+
+<template>
+  <div>{{ counterStore.sum }}</div>
+</template>
+
+<style scoped>
+</style>
+```
+
+## 修改数据
+
+### 直接修改
+
+```vue
+<script setup lang="ts">
+
+import {useCounterStore} from "@/stores/counter.ts";
+
+let counterStore = useCounterStore();
 
 
+/*方式一：就会对对应的count的状态进行两次修改：就是两次set*/
+function firstChange() {
+  counterStore.sum += 1;
+  counterStore.people.address += '~';
+}
+
+/*方式二：*/
+function secondChange() {
+  counterStore.$patch({
+    sum: counterStore.sum + 1,
+    people: {
+      address: counterStore.people.address + '~',
+    }
+  })
+}
+
+</script>
+
+<template>
+  <div>{{ counterStore.sum }}</div>
+  <div>{{ counterStore.people }}</div>
+  <button @click="firstChange">方式一</button>
+  <button @click="secondChange">方式二</button>
+</template>
+
+<style scoped>
+</style>
+```
+
+### action
+
+```ts
+import {ref} from 'vue'
+import {defineStore} from 'pinia'
+import type {People} from "@/entity/entity.ts";
+
+export const useCounterStore = defineStore('counter', () => {
+
+    /*state属性*/
+    let sum = ref<number>(666);
+
+    let people = ref<People>({
+        id: 1,
+        name: '张三',
+        address: '西安'
+    })
+
+    /*action方法*/
+    function changeData() {
+        sum.value += 1;
+        people.value.address += '~';
+    }
+
+    return {sum, people, changeData}
+})
+```
+
+```vue
+<script setup lang="ts">
+
+import {useCounterStore} from "@/stores/counter.ts";
+
+let counterStore = useCounterStore();
+
+function update() {
+  counterStore.changeData();
+}
+
+</script>
+
+<template>
+  <div>{{ counterStore.sum }}</div>
+  <div>{{ counterStore.people }}</div>
+  <button @click="update">方式三</button>
+</template>
+
+<style scoped>
+</style>
+```
+
+
+
+# 路由
+
+- 创建项的时候，就自动把路由选项勾选上
+
+## 基本切换
+
+- 路由组件通常保存在pages或views文件夹，一般组件通常放在components文件夹
+- 通过点击导航，消失了的组件，默认是被销毁的，需要的时候再去挂载
+
+![image-20250224144652835](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250224144652835.png)
+
+### index.ts
+
+```ts
+import {createRouter, createWebHistory} from 'vue-router'
+import HomeView from '../views/HomeView.vue'
+import AboutView from "@/views/AboutView.vue";
+import WelcomeView from "@/views/WelcomeView.vue";
+
+/*创建路透*/
+const router = createRouter({
+    history: createWebHistory(),
+    routes: [
+        {
+            path: '/home',
+            component: HomeView,
+        },
+        {
+            path: '/welcome',
+            /*name：可以通过name跳转*/
+            name: 'erickWelcome',
+            component: WelcomeView
+        },
+        {
+            path: '/about',
+            component: AboutView
+        },
+        // 再定一个一个可以重定向的
+    ],
+})
+
+/*导出路由*/
+export default router
+```
+
+### main.ts
+
+```ts
+import {createApp} from 'vue'
+import App from './App.vue'
+import router from './router'
+
+const app = createApp(App)
+
+/*挂载路由*/
+app.use(router)
+
+app.mount('#app')
+```
+
+### 三个路由组件
+
+```vue
+<template>
+  <div>About Page</div>
+</template>
+```
+
+```vue
+<template>
+  <div>Home Page</div>
+</template>
+```
+
+```vue
+<template>
+  <div>我是欢迎页面</div>
+</template>
+```
+
+### App
+
+```vue
+<script setup lang="ts">
+</script>
+
+<template>
+
+  <div>我是主页面</div>
+  <div>
+    <h2>导航栏目</h2>
+    <div>
+      <!--to: 三种写法-->
+      <RouterLink to="/home">Home</RouterLink>
+      <RouterLink :to="{path:'/about'}">About</RouterLink>
+      <RouterLink :to="{name: 'erickWelcome'}">Welcome</RouterLink>
+    </div>
+  </div>
+  <!-- 占位符，路由的页面在什么地方引入 -->
+  <RouterView/>
+</template>
+
+<style scoped>
+</style>
+```
+
+## 嵌套路由
+
+```ts
+import {createRouter, createWebHistory} from 'vue-router'
+import HomeView from '../views/home/HomeView.vue'
+import Erick from "@/views/home/Erick.vue";
+import Lucy from "@/views/home/Lucy.vue";
+
+const router = createRouter({
+    history: createWebHistory(),
+    routes: [
+        {
+            path: '/home',
+            component: HomeView,
+            children: [
+                {
+                    path: 'lucy',
+                    component: Lucy,
+                },
+                {
+                    path: 'erick',
+                    component: Erick,
+                }
+            ]
+        }
+    ],
+})
+
+export default router
+```
+
+```vue
+<template>
+  <div>Home Page</div>
+  <RouterLink to="/home/erick">Erick</RouterLink>
+  <RouterLink to="/home/lucy">Lucy</RouterLink>
+  <RouterView/>
+</template>
+<script setup lang="ts">
+</script>
+```
+
+## 路由传参
+
+### query
+
+```bash
+# 路由地址： 
+http://localhost:5173/home/lucy?name=lucy&gender=female
+```
+
+```vue
+<template>
+  <div>Home Page</div>
+
+  <RouterLink :to="{
+    path: '/home/erick',
+    query: {
+      name: erick.name,
+      gender: erick.gender,
+    }
+  }">Erick
+  </RouterLink>
+
+  <RouterLink :to="{
+    path: '/home/lucy',
+    query: {
+      name: lucy.name,
+      gender: lucy.gender,
+    }
+  }">Lucy
+  </RouterLink>
+
+  <RouterView/>
+
+</template>
+<script setup lang="ts">
+let erick = {
+  name: 'erick',
+  gender: 'male',
+}
+
+let lucy = {
+  name: 'lucy',
+  gender: 'female',
+}
+</script>
+```
+
+```vue
+<template>
+  <div>我是舒展的家</div>
+  <div>{{route.query.name}}</div>
+  <div>{{route.query.gender}}</div>
+</template>
+
+<script setup lang="ts">
+
+import {useRoute} from "vue-router";
+
+let route = useRoute();
+</script>
+```
+
+### params
+
+- 需要在路由中提前预定义好占位符
+- 路由匹配只能使用name，不能使用path
+
+```bash
+url
+http://localhost:5173/home/lucy/lucy/female
+```
+
+```ts
+import {createRouter, createWebHistory} from 'vue-router'
+import HomeView from '../views/home/HomeView.vue'
+import Erick from "@/views/home/Erick.vue";
+import Lucy from "@/views/home/Lucy.vue";
+
+const router = createRouter({
+    history: createWebHistory(),
+    routes: [
+        {
+            path: '/home',
+            component: HomeView,
+            children: [
+                {
+                    /*只能根据name匹配*/
+                    name: 'mylucy',
+                    /*需要提前占位*/
+                    path: 'lucy/:name/:gender',
+                    component: Lucy,
+                },
+                {
+                    name: 'myerick',
+                    path: 'erick/:name/:gender',
+                    component: Erick,
+                }
+            ]
+        }
+    ],
+})
+
+export default router
+```
+
+```vue
+<template>
+  <div>Home Page</div>
+
+  <RouterLink :to="{
+   name: 'myerick',
+   params: {
+     name: erick.name,
+     gender: erick.gender,
+   }
+  }">Erick
+  </RouterLink>
+
+  <RouterLink :to="{
+   name:'mylucy',
+   params: {
+     name: lucy.name,
+     gender: lucy.gender,
+   }
+  }">Lucy
+  </RouterLink>
+  <RouterView/>
+
+</template>
+<script setup lang="ts">
+let erick = {
+  name: 'erick',
+  gender: 'male',
+}
+
+let lucy = {
+  name: 'lucy',
+  gender: 'female',
+}
+</script>
+```
+
+```vue
+<template>
+  <div>我是舒展的家</div>
+  <div>{{route.params.name}}</div>
+  <div>{{ route.params.gender}}</div>
+</template>
+
+<script setup lang="ts">
+
+import {useRoute} from "vue-router";
+
+let route = useRoute();
+</script>
+```
+
+## 编程式
+
+```vue
+<script setup lang="ts">
+
+import {useRouter} from "vue-router";
+
+let router = useRouter();
+
+function gotoNew() {
+  router.push("/home");
+}
+</script>
+
+<template>
+  <div>我是主页面</div>
+  <div>
+    <RouterLink to="/home">Home</RouterLink>
+  </div>
+
+  <button @click="gotoNew">点击跳转</button>
+  <!-- 占位符，路由的页面在什么地方引入 -->
+  <RouterView/>
+</template>
+
+<style scoped>
+</style>
+```
 
