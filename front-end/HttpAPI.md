@@ -565,43 +565,6 @@ public class TimeoutController {
 }
 ```
 
-# http
-
-- Node内置模块，用于进行node端的网络请求端处理
-- node官方提供的，用来将node变为一个服务器
-- 运行该文件，就会启动一个node的后端server
-- 一般不会直接使用，都是使用express来创建server，使用axios来发送请求
-
-```js
-let http = require('http');
-
-/*创建一个server*/
-let erickService = http.createServer();
-
-/* 通过 http://localhost:8080/+任何路径都可以 访问触发*/
-erickService.on('request', function (request, response) {
-    /*请求体*/
-    if (request) {
-        /*url: /, 地址为完整url删除 host和port后的地址*/
-        console.log(`Your Method is ${request.method}, Your url is ${request.url}`);
-    }
-
-    /*响应体*/
-    if (response) {
-        /*解决中文乱码问题*/
-        response.setHeader('Content-Type', 'text/html;charset=utf-8');
-        /* end : 结束本次请求，返回给页面的数据*/
-        response.end('我是舒展');
-    }
-});
-
-const PORT = 8080;
-const HOST = 'localhost';
-erickService.listen(PORT, HOST, function () {
-    console.log('http server started successfully');
-});
-```
-
 # Axios
 
 ## 1. 基本介绍

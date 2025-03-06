@@ -1,3 +1,125 @@
+# Nginx
+
+- [下载官网](https://nginx.org/en/download.html)
+
+## 1. 下载上传
+
+![image-20250305173804196](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250305173804196.png)
+
+```bash
+# 下载  pgp
+#  使用mac的sftp上传文件到
+/Users/shuzhan/Desktop/nginx-1.26.3.tar.gz /usr/tmp
+
+# 解压文件
+cd usr/tmp
+tar -zxvf nginx-1.26.3.tar.gz
+
+# 安装编译依赖
+sudo yum install -y gcc make openssl-devel pcre-devel zlib-devel
+```
+
+## 2. 配置编译选项
+
+- 运行configure脚本，编译当前解压的文件
+
+```bash
+./configure \
+--prefix=/usr/local/nginx \
+--sbin-path=/usr/local/nginx/sbin/nginx \
+--conf-path=/usr/local/nginx/conf/nginx.conf \
+--pid-path=/var/run/nginx.pid \
+--with-http_ssl_module \
+--with-http_gzip_static_module \
+--with-pcre
+```
+
+```bash
+./configure \
+--prefix=/usr/local/nginx \          # 安装主目录
+--sbin-path=/usr/local/nginx/sbin/nginx \  # 可执行文件路径
+--conf-path=/usr/local/nginx/conf/nginx.conf \  # 配置文件路径
+--pid-path=/var/run/nginx.pid \      # PID文件路径
+--with-http_ssl_module \             # 启用SSL（HTTPS必需）
+--with-http_gzip_static_module \     # 启用Gzip压缩
+--with-pcre                          # 正则表达式支持
+```
+
+## 3. 编译并安装
+
+```bash
+make install
+
+# 检查版本
+/usr/local/nginx/sbin/nginx -v
+```
+
+## 4. 启动
+
+```bash
+cd /usr/local/nginx/sbin
+
+# 启动
+./nginx 
+
+# 默认端口是80, 访问
+http://39.105.210.163/ 
+
+
+# 启动停止
+./nginx                  # 启动
+./nginx -s stop          # 快速停止
+./nginx -s quit          # 优雅关闭，在退出前完成已经接受的连接请求
+./nginx -s reload        # 重新加载配置
+```
+
+## 5. 配置Systemd服务
+
+- 先把上面的关闭了
+
+```bash
+sudo vi /etc/systemd/system/nginx.service
+```
+
+```bash
+[Unit]
+Description=The NGINX HTTP and reverse proxy server
+After=network.target
+
+[Service]
+Type=forking
+PIDFile=/var/run/nginx.pid
+ExecStartPre=/usr/local/nginx/sbin/nginx -t
+ExecStart=/usr/local/nginx/sbin/nginx
+ExecReload=/usr/local/nginx/sbin/nginx -s reload
+ExecStop=/usr/local/nginx/sbin/nginx -s quit
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
+```
+
+```bash
+# 重新加载系统服务
+sudo systemctl daemon-reload
+
+sudo systemctl start nginx          # 启动
+sudo systemctl status nginx         # 查看状态
+sudo systemctl stop nginx           # 关闭
+sudo systemctl restart nginx             # 重启
+
+sudo systemctl enable nginx         # 开机启动
+```
+
+## 6. index.html
+
+```bash
+# 默认访问的就是该页面
+/usr/local/nginx/htm/index.html
+```
+
+
+
 # Tomcat
 
 ## Docker

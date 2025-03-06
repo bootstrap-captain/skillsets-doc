@@ -913,3 +913,20 @@ let fourthService_1: FourthService<CommonSearchRequest, CommonSearchRequest> = n
 let fourthService_2: FourthService<CommonSearchRequest, HomeSearchRequest> = new FourthService<HomeSearchRequest, HomeSearchRequest>();
 ```
 
+### 默认类型
+
+```ts
+function test<T = string>(name: T) {
+    console.log(name);
+}
+
+/*使用默认类型*/
+test("erick");
+
+/*根据类型自定义推断*/
+test(123);
+
+/*显示指定类型*/
+test<string>("erick");
+```
+
