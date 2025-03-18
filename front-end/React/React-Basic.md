@@ -1023,7 +1023,6 @@ export default function App() {
     const userNameRef = useRef<HTMLInputElement>({} as HTMLInputElement);
     const ageRef = useRef<HTMLInputElement>({} as HTMLInputElement);
 
-
     const check = () => {
         console.log(userNameRef.current.value);
         console.log(ageRef.current.value);
@@ -1304,6 +1303,234 @@ export function Father() {
             <br/>
             <FirstSon/>
             <SecondSon address={data.address} age={data.age}/>
+        </div>
+    )
+}
+```
+
+# 受控组件
+
+## 高阶函数
+
+### 1. 定义
+
+```bash
+# 高阶函数：    如果一个函数满足下面两条任意一个
+- A函数，接收的参数是一个函数，       那么A就是高阶函数
+- A函数，调用的返回值依然是一个函数，  那么A就是高阶函数
+       #    Promise  setTimeout, arr.map
+
+# 函数柯里化
+- 通过函数调用继续返回函数的方式，实现多次接受参数，最后统一处理的函数编码方式
+```
+
+### 2. 非柯里化
+
+```ts
+function sum(a, b, c) {
+    return a + b + c;
+}
+
+let sum1 = sum(1, 3, 5);
+console.log(sum1);
+```
+
+### 3. 柯里化
+
+```ts
+/*因为调用参数时，不一定一下子都能拿到所有参数*/
+function sum(a) {
+    console.log(`a=${a}`);
+
+    return (b) => {
+        console.log(`b=${b}`)
+
+        return (c) => {
+            console.log(`c=${c}`)
+            return a + b + c;
+        }
+    }
+}
+
+/*a=1
+ b=3
+ c=5
+*/
+sum(1)(3)(5);
+```
+
+## 函数回调
+
+- 如果在回调方法中，需要传递除了event之外的参数，可以考虑柯里化和非柯里化两种方式
+
+### 1. 调用方式
+
+```tsx
+export default function App() {
+
+    const work = (): string => {
+        console.log("App work");
+        return "Hello World!";
+    }
+
+    /*内容： 该函数的返回值*/
+
+    /*1. 不带(), 函数不会执行，该变量的返回值就是一个函数*/
+    console.log(work);
+    /*2. 带()，该函数执行后，返回值：Hello World!*/
+    console.log(work());
+
+    return (
+        <>
+
+        </>
+    )
+}
+```
+
+```tsx
+export default function App() {
+
+    const work = (): string => {
+        console.log("App work");
+        return "Hello World!";
+    }
+
+    return (
+        <>
+            {/*1. 不带()，该变量的返回值是一个函数，一开始不会执行，事件触发后，会调用该函数*/}
+            邮箱：<input onBlur={work} type="text" placeholder="邮箱"/>
+
+            {/*2. 带(), 该变量的返回值是一个string, 一上来就会执行该方法，并将返回值作为回调函数*/}
+            姓名：<input onBlur={work()} type="text" placeholder="姓名"/>
+        </>
+    )
+}
+```
+
+### 2. 非柯里化
+
+```tsx
+import {BaseSyntheticEvent} from "react";
+
+export default function App() {
+
+    const work = (keyName: string, event: BaseSyntheticEvent) => {
+        console.log(keyName);
+        console.log(event.target.value);
+    }
+
+
+    return (
+        <>
+            {/*用函数包装，再去调用*/}
+            邮箱：<input onBlur={(event: BaseSyntheticEvent) => {
+            work('email', event);
+        }} type="text" placeholder="邮箱"/>
+        </>
+    )
+}
+```
+
+### 3. 柯里化
+
+```tsx
+import {BaseSyntheticEvent} from "react";
+
+export default function App() {
+
+    const work = (keyName: string) => {
+        console.log(keyName);
+        return (event: BaseSyntheticEvent) => {
+            console.log(event.target.value);
+        }
+    }
+
+    return (
+        <>
+            {/*用函数包装，再去调用
+             1. 一上来就调用一次
+             2. 后续每次点击，就会调用其内层函数
+             3. dataType可以自己传递，但是event是React帮忙传递的*/}
+            邮箱：<input onBlur={work('email')} type="text" placeholder="邮箱"/>
+        </>
+    )
+}
+```
+
+## 非受控组件
+
+- 收集表单中的数据：页面内所有输入类的DOM，现用现取
+
+```tsx
+import {BaseSyntheticEvent, useRef} from "react";
+
+export default function App() {
+
+    const nameRef = useRef<HTMLInputElement>({} as HTMLInputElement);
+    const addressRef = useRef<HTMLInputElement>({} as HTMLInputElement);
+    const emailRef = useRef<HTMLInputElement>({} as HTMLInputElement);
+
+    /*用的时候再去取*/
+    const savePeople = (event: BaseSyntheticEvent) => {
+        console.log(event);
+        event.preventDefault();
+        alert(nameRef.current.value + addressRef.current.value + emailRef.current.value);
+    }
+
+    return (
+        <div>
+            <form action={""} onSubmit={savePeople}>
+                用户名：<input type={"text"} ref={nameRef}/>
+                地址：<input type={"text"} ref={addressRef}/>
+                邮箱：<input type={"text"} ref={emailRef}/>
+                <button>提交</button>
+            </form>
+        </div>
+    )
+}
+```
+
+##  受控组件
+
+- 每次改变输入框的值，就将其值放入state中
+
+```tsx
+import {BaseSyntheticEvent, useState} from "react";
+
+export interface People {
+    name: string;
+    address: string;
+    email: string;
+}
+
+export default function App() {
+    console.log('render');
+
+    const [people, setPeople] = useState<People>({} as People);
+
+    const savePeople = (keyName: string) => {
+        return (event: BaseSyntheticEvent) => {
+            setPeople({
+                ...people,
+                [keyName]: event.target.value,
+            })
+        }
+    }
+
+    const log = (event: BaseSyntheticEvent) => {
+        event.preventDefault();
+        console.log(people);
+    }
+
+    return (
+        <div>
+            <form action={""} onSubmit={log}>
+                用户名：<input type={"text"} onBlur={savePeople('name')}/>
+                地址：<input type={"text"} onBlur={savePeople('address')}/>
+                邮箱：<input type={"text"} onBlur={savePeople('email')}/>
+                <button>提交</button>
+            </form>
         </div>
     )
 }
@@ -2272,358 +2499,6 @@ export function Third() {
         </>
     )
 
-}
-```
-
-
-
-# 受控组件
-
-## 1. 高阶函数
-
-### 1.1 高阶函数
-
-```bash
-# 高阶函数：    如果一个函数满足下面两条任意一个
-- 如果A函数，接收的参数是一个函数，       那么A就是高阶函数
-- 如果A函数，调用的返回值依然是一个函数，  那么A就是高阶函数
-       #    Promise  setTimeout, arr.map
-
-# 函数柯里化
-- 通过函数调用继续返回函数的方式，实现多次接受参数，最后统一处理的函数编码方式
-```
-
-#### 非柯里化
-
-```jsx
-function sum(a, b, c) {
-    return a + b + c;
-}
-
-let sum1 = sum(1, 3, 5);
-console.log(sum1);
-```
-
-#### 柯里化
-
-```jsx
-/*因为调用参数时，不一定一下子都能拿到所有参数*/
-function sum(a) {
-    console.log(`a=${a}`);
-
-    return (b) => {
-        console.log(`b=${b}`)
-
-        return (c) => {
-            console.log(`c=${c}`)
-            return a + b + c;
-        }
-    }
-}
-
-/*a=1
- b=3
- c=5
-*/
-sum(1)(3)(5);
-```
-
-## 1.2 函数回调-普通
-
-- 回调箭头函数时候，不能带()
-
-```jsx
-import {Component} from "react";
-
-export default class Citi extends Component {
-
-    saveUsername = (event) => {
-        console.log('hello');
-        // 返回值是undefined
-    }
-
-    saveEmail = (event) => {
-        console.log('email');
-    }
-
-    render() {
-        return (
-            <div>
-                {/*1. saveUsername不能加()，否则就是，还没点呢，在render的时候，就已经调用了
-                   2. 后续onChange不会再触发回调: 因为是将saveUsername的返回值作为回调
-                                  2.1 saveUsername的返回值是undefined*/}
-                用户名：<input onChange={this.saveUsername('username')} type="text" placeholder="用户名"/>
-
-                {/*是把一个函数的指向作为回调*/}
-                邮箱：<input onChange={this.saveEmail} type="text" placeholder="邮箱"/>
-            </div>)
-    }
-}
-```
-
-## 1.3 函数回调-柯里化
-
-- 如果要在回调方法中，使用参数()，可以考虑高阶函数-函数柯里化
-
-```jsx
-import {Component} from "react";
-
-export default class Citi extends Component {
-
-    state = {
-        username: ''
-    }
-
-    /*被调用函数，返回了一个内层函数
-        1. dataType： 可以传递参数名
-        2. 取值时，用[]来存入到state中
-    * */
-    saveUsername = (dataType) => {
-        console.log('hello');
-
-        /*回调的时候，会把event传递进去*/
-        return (event) => {
-            this.setState({
-                [dataType]: event.target.value
-            })
-        }
-    }
-
-    render() {
-        return (
-            <div>
-                {/*1. 返回值是内层函数,该内层函数作为方法的回调
-                       1.1 一上来就调用一次
-                       1.2 后续每次点击，就会调用其内层函数
-                       1.3 dataType可以自己传递，但是event是React帮忙传递的*/}
-                用户名：<input onChange={this.saveUsername('username')} type="text" placeholder="用户名"/>
-            </div>)
-    }
-}
-```
-
-## 1.4 函数回调-非柯里化
-
-```jsx
-import {Component} from "react";
-
-export default class Citi extends Component {
-
-    state = {
-        username: ''
-    }
-
-    saveUsername = (dataType, event) => {
-        this.setState({
-            [dataType]: event.target.value
-        })
-    }
-
-    render() {
-        return (
-            <div>
-
-                {/*onChange需要一个函数作为回调，第一次不会加载
-                    传入的是一个箭头函数
-                 1. 点击后，React把event自动传递给这个函数
-                 2. 函数内部再去调用this.saveUsername，并且把event和dataType传递进去*/}
-
-                用户名：<input onChange={(event) => {
-                this.saveUsername('username', event);
-            }} type="text" placeholder="用户名"/>
-            </div>)
-    }
-}
-```
-
-## 2. 受控/非受控
-
-- 收集表单中的数据
-
-### 2.1 非受控组件
-
-- 页面内所有输入类的DOM，现用现取
-
-```jsx
-import {Component} from "react";
-
-export default class Citi extends Component {
-
-    savePeople = (event) => {
-        event.preventDefault(); // 阻止表单跳转
-        let username = this.username.value;
-        let address = this.address.value;
-        let email = this.email.value;
-        alert(username + "=" + address + "=" + email);
-    }
-
-    render() {
-        return (
-            <div>
-                <form action="" onSubmit={this.savePeople}>
-                    用户名：<input ref={(currentNode) => {
-                    this.username = currentNode
-                }} type="text" placeholder="用户名"/>
-
-                    地址：<input ref={(currentNode) => {
-                    this.address = currentNode
-                }} type="text" placeholder="地址"/>
-
-                    邮箱：<input ref={(currentNode) => {
-                    this.email = currentNode
-                }} type="text" placeholder="邮箱"/>
-
-                    <button>提交</button>
-                </form>
-
-            </div>)
-    }
-}
-```
-
-### 2.2 受控组件
-
-- 每次改变输入框的值，就将其值放入state中
-- 表单中的数据，会通过比如onChange，放在当前组件的state属性中
-
-#### 基本写法
-
-```jsx
-import {Component} from "react";
-
-export default class Citi extends Component {
-
-    state = {
-        username: '',
-        address: '',
-        email: '',
-    }
-
-    savePeople = () => {
-        const {username, email, address} = this.state;
-        alert(username + "=" + address + "=" + email);
-    }
-
-    saveUsername = (event) => {
-        this.setState({username: event.target.value})
-    }
-
-    saveEmail = (event) => {
-        this.setState({email: event.target.value})
-    }
-
-    saveAddress = (event) => {
-        this.setState({address: event.target.value})
-    }
-
-    render() {
-        return (
-            <div>
-                <form action="" onSubmit={this.savePeople}>
-                    
-                    用户名：<input onChange={this.saveUsername} type="text" placeholder="用户名"/>
-
-                    地址：<input onChange={this.saveAddress} type="text" placeholder="地址"/>
-
-                    邮箱：<input onChange={this.saveEmail} type="text" placeholder="邮箱"/>
-                    <button>提交</button>
-                </form>
-            </div>)
-    }
-}
-```
-
-#### 柯里化
-
-```jsx
-import {Component} from "react";
-
-export default class Citi extends Component {
-
-    state = {
-        username: '',
-        address: '',
-        email: '',
-    }
-
-    savePeople = () => {
-        const {username, address, email} = this.state;
-        alert(username + address + email);
-    }
-
-    /*柯里化*/
-    saveData = (key) => {
-        /*作为回调，React自动传递event*/
-        return (event) => {
-            this.setState({
-                [key]: event.target.value
-            })
-        }
-    }
-
-    render() {
-        return (
-            <div>
-                <form action="" onSubmit={this.savePeople}>
-
-                    用户名：<input onChange={this.saveData("username")} type="text" placeholder="用户名"/>
-
-                    地址：<input onChange={this.saveData("address")} type="text" placeholder="地址"/>
-
-                    邮箱：<input onChange={this.saveData("email")} type="text" placeholder="邮箱"/>
-                    <button>提交</button>
-                </form>
-            </div>)
-    }
-}
-```
-
-#### 非柯里化
-
-```jsx
-import {Component} from "react";
-
-export default class Citi extends Component {
-
-    state = {
-        username: '',
-        address: '',
-        email: '',
-    }
-
-    savePeople = () => {
-        const {username, address, email} = this.state;
-        alert(username + address + email);
-    }
-
-    /*柯里化*/
-    saveData = (event, key) => {
-        this.setState({
-            [key]: event.target.value
-        })
-
-    }
-
-    render() {
-        return (
-            <div>
-                <form action="" onSubmit={this.savePeople}>
-
-                    用户名：<input onChange={(event) => {
-                    this.saveData(event, 'username')
-                }} type="text" placeholder="用户名"/>
-
-                    地址：<input onChange={(event) => {
-                    this.saveData(event, 'address')
-                }} type="text" placeholder="地址"/>
-
-                    邮箱：<input onChange={(event) => {
-                    this.saveData(event, 'email')
-                }} type="text" placeholder="邮箱"/>
-                    <button>提交</button>
-                </form>
-            </div>)
-    }
 }
 ```
 
