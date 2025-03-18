@@ -839,6 +839,7 @@ export default function Father(props: FatherProps) {
     return (
         <div>
             <div>我是父组件</div>
+             {/*子组件的渲染位置*/}
             <div>{props.children}</div>
         </div>
     )
