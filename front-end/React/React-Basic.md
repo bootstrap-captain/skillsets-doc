@@ -2041,43 +2041,6 @@ export default function Mall() {
 }
 ```
 
-## 4. 标签体
-
-- 在使用组件时，需要传递组件标签体的内容
-
-```tsx
-import {Son} from "./Son";
-import React from "react";
-
-export default function Father() {
-    return (
-        <div>
-            <h1>父亲组件</h1>
-            {/*渲染子组件的同时，传递了Hi，Son*/}
-            <Son>Hi, Son</Son>
-        </div>
-    );
-}
-```
-
-```tsx
-import React from "react";
-
-interface SonProps {
-    children?: React.ReactNode /*可选的children属性*/
-}
-
-export function Son(props: SonProps) {
-    return (
-        <div>
-            <h1>儿子组件</h1>
-            {/*要获取Father给Son组件传递的标签体内容: Hi,Son*/}
-            {props.children}
-        </div>
-    );
-}
-```
-
 ## 6. render次数
 
 - 因为父组件的state属性变化，导致子组件的props变化
