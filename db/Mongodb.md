@@ -22,6 +22,171 @@
 - 读写频繁
 - 数据价值低，对事务要求不高
 
+# 安装
+
+- MongoDB Community Server
+
+## 1. 单机版
+
+- [官方安装文档](https://www.mongodb.com/try/download/community)
+
+![image-20250107195332229](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250107195332229.png)
+
+### 上传
+
+```bash
+# 上传
+put /Users/shuzhan/Desktop/mongodb-linux-x86_64-rhel70-7.0.16.tgz /opt
+
+# 解压
+tar -xvf mongodb-linux-x86_64-rhel70-7.0.16.tgz
+
+# 解压后的目录结构
+-rw-r--r-- 1 root root  30608 Apr 24 23:50 LICENSE-Community.txt
+-rw-r--r-- 1 root root  16726 Apr 24 23:50 MPL-2
+-rw-r--r-- 1 root root   1978 Apr 24 23:50 README
+-rw-r--r-- 1 root root 122512 Apr 24 23:50 THIRD-PARTY-NOTICES
+drwxr-xr-x 2 root root   4096 May 18 11:10 bin
+
+
+# 移动解压后的文件夹到指定目录
+# 所有的mongo的文件，都移动到这个目录中
+mv mongodb-linux-x86_64-rhel70-7.0.16 /usr/local/mymongo
+
+# 新建几个目录，用来存储日志和数据
+cd /usr/local/mymongo
+mkdir -p data/db                # 存储数据
+mkdir -p log                    # 存储日志
+```
+
+### mongodb.conf 
+
+- [配置文件](https://www.mongodb.com/docs/manual/reference/configuration-options/)
+
+```bash
+systemLog:
+   destination: file                                  # 以文件的形式输出日志
+   path: "/usr/local/mymongo/log/mongod.log"         # 具体的绝对路径
+   logAppend: true                                    # mongo重启时，日志附加到原文件末尾
+
+storage:
+   dbPath: "/usr/local/mymongo/data/db"                # 存储数据的目录
+
+processManagement:
+   fork: true                                          # 后台启动
+
+net:
+   bindIp: 172.17.56.24                               # 局域网ip，非公网IP
+   port: 27017
+   
+security:
+  authorization: enabled                             # 开启权限认证   
+```
+
+```bash
+# 上传配置文件
+put /Users/shuzhan/Desktop/mongodb.conf /opt
+```
+
+### 启动
+
+```bash
+# 启动: 在bin目录中
+/usr/local/mymongo/bin/mongod -f /opt/mongodb.conf 
+
+- 如果启动失败，一般是配置文件出错，去对应的log里面查找即可
+
+# 查看
+ps -ef | grep mongod
+
+# 远程Compass连接
+- 连接的IP为公网IP
+```
+
+![image-20240518120043762](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20240518120043762.png)
+
+## 2. 安全认证
+
+- 默认的mongodb启动后，是不需要安全认证的
+- mongodb提供了基于用户的权限认证
+- 通过Compass登陆进去
+
+```bash
+use admin;                 #  切换到admin
+show collections;          #  包含 system.version 的这个collection
+db.system.version.find();   
+
+# 结果
+[
+  {
+    "_id": "featureCompatibilityVersion",
+    "version": "7.0"
+  }
+]
+```
+
+### 管理员用户
+
+```bash
+# root: 超级权限
+db.createUser({user:"erickroot", pwd:"123456", roles:[{"role":"root", "db":"admin"}]});
+show collections;           # 在admin库创建了一个system.users的collection
+db.system.users.find();
+
+# userAdminAnyDatabase: 在指定数据库创建和修改用户(除了config和local库存)
+db.createUser({user:"erickadmin", pwd:"123456", roles:[{"role":"userAdminAnyDatabase","db":"admin"}]});
+show collections;           # 在admin库的system.users添加用户
+db.system.users.find();
+
+# 删除用户
+db.dropUser("erickadmin");
+
+# 修改密码
+db.changeUserPassword("erickadmin","123456");
+```
+
+### 关闭服务端
+
+```bash
+ps -ef |grep mongo         # 查看端口
+
+kill -9 1741               # 杀死进程
+
+# 在配置文件中：开启认证
+```
+
+### 修改配置文件
+
+```bash
+systemLog:
+   destination: file                                  # 以文件的形式输出日志
+   path: "/usr/local/mymongo/log/mongod.log"         # 具体的绝对路径
+   logAppend: true                                    # mongo重启时，日志附加到原文件末尾
+
+storage:
+   dbPath: "/usr/local/mymongo/data/db"                # 存储数据的目录
+
+processManagement:
+   fork: true                                          # 后台启动
+
+net:
+   bindIp: 172.17.56.24                               # 局域网ip，非公网IP
+   port: 27017
+   
+security:
+  authorization: enabled                             # 开启权限认证   
+```
+
+### 重启服务端
+
+```bash
+# 上传配置文件
+put /Users/shuzhan/Desktop/mongodb.conf /opt
+
+# 启动
+/usr/local/mymongo/bin/mongod -f /opt/mongodb.conf 
+```
+
 # 基本指令
 
 - 区分大小写

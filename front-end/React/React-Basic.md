@@ -1,353 +1,191 @@
-# 安装
+# 基本入门
 
-- 原生的前端框架，用于构建用户界面(数据渲染成HTML视图)的JavaScript库
-- Facebook开发的
-
-```bash
-# 原生JS痛点
-- 操作DOM繁琐，(DOM-API操作UI):     document.getElementById('app')
-- 效率低, 每次操作，都需要进行DOM大量重绘重排
-- 原生的JavaScript，只有js有模块化，没有组件化编码方案(js,css,html)，代码复用率低
-
-# React特点
-- 虚拟DOM+Dom Diffing算法，尽量减少与真实DOM的交互次数
-- 组件化，声明式编码，提高开发效率及组件复用率
-- React Native中可以使用React语法进行移动端开发
-```
-
-## 1. CDN引入
-
-- 引入的核心库，CDN方式引入，链接直接到网站，然后CTRL+S保存文件到本地
-
-```html
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-
-    <!--引入有顺序-->
-    <!--1.React核心库-->
-    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-
-    <!--2. React操作Dom的库-->
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-
-    <!--3. babel
-           3.1  ES6->ES5 语法
-           3.2  React的jsx -> js-->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-</head>
-<body>
-
-<!--准备好一个容器-->
-<div id="erick">
-
-</div>
-
-<!--一定要写text/babel，表示使用react的jsx语法-->
-<script type="text/babel">
-
-    /*1. 获取容器节点*/
-    const root = ReactDOM.createRoot(document.getElementById('erick'));
-
-    /*2. 创建要渲染的jsx内容*/
-    const virtualDom = (
-        /*里面写对应的html标签*/
-        <h1>Hello, React</h1>
-    ) //不要加单引号，因为不是字符串, () 可以省略
-
-    /*3. 渲染jsx对应的虚拟DOM到页面*/
-    root.render(virtualDom);
-</script>
-</body>
-</html>
-```
-
-- 浏览器去翻译babel，可能会比较耗时。后面在prod上，会先完成babel的作用，再发布到生产
-
-![image-20240531111025866](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20240531111025866.png)
-
-## 2. React脚手架
-
-- 在实际开发中，是基于React官方提供的脚手架，搭建好基本的环境
-
-### 2.1 构建步骤
+## 1. Vite脚手架
 
 ```bash
-# 1. 全局安装 create-react-app的工具(CDK-CLI)
-npm install -g create-react-app
-
-# 2. 进入目录，创建好自己的项目
-create-react-app erick-demo
+npm create vite@latest
+# 依次输入  项目名， React, TypeScript
 ```
 
-### 2.2 项目结构
+![image-20250317112745263](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250317112745263.png)
 
-![image-20240602154808599](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20240602154808599.png)
+## 2. 文件
 
-#### index.html
+### index.html
 
 - SPA：single page application
 
 ```html
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="utf-8"/>
-    <!--%PUBLIC_URL%: 代表public文件夹的路径-->
-    <link rel="icon" href="%PUBLIC_URL%/favicon.ico"/>
+    <meta charset="UTF-8"/>
     <title>Erick React</title>
 </head>
 <body>
 <!--主容器：只会放一个组件-->
 <div id="root"></div>
+<!--引入main.tsc-->
+<script src="/src/main.tsx" type="module"></script>
 </body>
 </html>
 ```
 
-#### index.js
+### main.tsc
 
 - 入口文件，将APP组件渲染到页面
 
 ```js
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import App from './App';
-
+import {StrictMode} from 'react'
+import {createRoot} from 'react-dom/client'
+import App from './App.tsx'
 /*获取页面节点,并转换为虚拟DOM*/
-const root = ReactDOM.createRoot(document.getElementById('root'));
-
-/*将组件渲染到目标结点的页面上*/
-root.render(
-    /*使用React严格语法，比如react过时的api*/
-    <React.StrictMode>
+createRoot(document.getElementById('root')!).render(
+    /*将组件渲染到目标结点的页面上
+    * 使用React严格语法，比如react过时的api*/
+    <StrictMode>
         <App/>
-    </React.StrictMode>
-);
+    </StrictMode>,
+)
 ```
 
-#### app.js
+### App.tsc
 
 - 导出APP组件
-- 一般不会在这里直接写组件，而是利用app.js来统一导入其他的组件
+- 一般不会在这里直接写组件，而是利用app.tsc来统一导入其他的组件
 
 ```js
-import React from "react";
-
-/*一个组件*/
-export default class App extends React.Component {
-    render() {
-        return (
-            /*组件的jsx写的带有html标签的内容*/
-            <div>
-                hello
-            </div>)
-    }
+function App() {
+    return (
+        <>
+            <div>hello world</div>
+        </>
+    )
 }
+
+export default App
 ```
 
-### 2.3 开发规范
+## 3. 开发规范
 
 ```bash
-# 具体的模块，建在src/component/xxx中
-- jsx：React的模块组件代码
-- js：js功能代码
+# 具体的模块，建在src/components/xxx中
+- tsx：React的模块组件代码        rfc快速生成函数式组件            rf
+- ts：ts功能代码 
 - css：样式代码
 
-# 导出的模块，可以在App.js中统一配置
+# 导出的模块，可以在App.tsx中统一配置
 ```
 
-![image-20240602164303445](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20240602164303445.png)
+### Food.tsx
 
-#### Citi.jsx
+```tsx
+import {sayHello} from "./sayHello.ts";
+import './food.css'
 
-- React的组件
+function Food() {
+    return (
+        <>
+            <div className='header'>我是食物</div>
+            <button onClick={sayHello}>点我</button>
+        </>
 
-```jsx
-import {Component} from "react";
-import './citi.css'
-
-export class Citi extends Component {
-    render() {
-        return (
-            <div className="citiTitle">
-                我是Citi Bank
-            </div>
-        )
-    }
+    );
 }
+
+export default Food;
 ```
 
-#### citi.css
-
-- 组件的具体样式
+### food.css
 
 ```css
-.citiTitle {
-    background-color: aqua;
+.header {
+    height: 200px;
+    width: 500px;
+    background-color: gold;
 }
 ```
 
-#### app.js
+### Food.ts
 
-- 导入其他的组件
-
-```js
-import React from "react";
-import {Citi} from "./component/Citi/Citi";
-
-/*/*入口的app.js,里面包含多个不同的组件*/
-export default class App extends React.Component {
-    render() {
-        return (
-            <div>
-                {/*导入其他组件*/}
-                <Citi/>
-            </div>)
-    }
+```ts
+export function sayHello() {
+    console.log("food");
 }
 ```
 
-## 3. TS项目
+### APP.tsx
 
-- 创建好项目后，在tsx文件中，按照ts的规范去写代码，其他正常
+```tsx
+import Food from "./component/food/Food.tsx";
 
-```bash
-# 创造一个模版项目，使用typescript的react模版
-create-react-app react-ts-demo --template typescript
-
-# 后面所有jsx文件，都变成了tsx文件
-- 项目运行后，会将tsx文件变成了jsx，然后再将jsx转换为js
-
-# 项目多了一个 tsconfig.json文件
-```
-
-```json
-{
-  "compilerOptions": {
-    "target": "es6",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
-    "allowJs": true,
-    "skipLibCheck": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "strict": true,
-    "forceConsistentCasingInFileNames": true,
-    "noFallthroughCasesInSwitch": true,
-    "module": "esnext",
-    "moduleResolution": "node",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "noEmit": true,
-    "jsx": "react-jsx"
-  },
-  "include": [
-    "src"
-  ]
+function App() {
+    return (
+        <>
+            <Food/>
+        </>
+    )
 }
+
+export default App
 ```
 
-# JSX
+## 4. TSX语法
 
-## 1. JSX/Js
+- React的语法，TSX最终也会被翻译为js
 
-- React的语法，支持两种方式来创建虚拟DOM
-- JSX最终也会被翻译为JS
-- 下面两个例子在React-16中写的
+### 基本规则
 
-### 1.1 js
+```tsx
+import {sayHello} from "./sayHello.ts";
+import './food.css'
+import Cat from "../cat/Cat.tsx";
 
-- 不用babel的依赖
+function Food() {
+    const name: string = 'erick';
 
-```html
-<!--type为"text/javascript"， 创建嵌套标签比较麻烦-->
-<script type="text/javascript">
-    const virtualDom = React.createElement('h1', {id: 'title'}, React.createElement('span', {}, 'Hello, React'))
-    ReactDOM.render(virtualDom, document.getElementById('erick'));
-</script>
-```
-
-### 1.2 jsx
-
-- JavaScript XML: 原生js的语法糖，里面的html也可以进行格式化
-- React定义的，一种类似于XML的js扩展语法： js + xml
-- 本质是React.createElement语法的语法糖
-
-```html
-<script type="text/babel">
-    const virtualDom = <h1 id="title"><span>Hello, React</span></h1>
-    ReactDOM.render(virtualDom, document.getElementById('erick'));
-</script>
-```
-
-## 2. 基本语法
-
-- 都是写在组件中，属于虚拟DOM的一部分
-
-```jsx
-import {Component} from "react";
-import './citi.css'
-import {Nike} from "../Nike/Nike";
-
-export default class Citi extends Component {
-    render() {
-        let name = 'erick';
-        return (
-            /*1. 定义虚拟DOM时，不要加引号*/
-            /* 3. 绑定样式时，不要用class, 要使用className,避免和ES6中的class关键字引发冲突*/
-            <div className="citiTitle">
-                {/*2. 注释使用方法*/}
-
-                {/* 4. 使用内联样式时，用style={{key:value}}方式*/}
-                <div style={{background: "red"}}>hello</div>
-                {/* 3. 使用js表达式时，使用{}来获取*/}
-                我是{name}
-                {/* 5. 虚拟DOM, 必须有一个根标签，且根标签内的标签必须闭合，因此用<div>包裹起来*/}
-
-                {/*6.标签首字母
-                       如果是小写开头，比如<div>，则将该标签转换为html中同名元素。若html中无该标签同名元素，则报错
-                       如果是大写开头，比如<Nike/>，则就去渲染对应的组件，若组件没定义，则报错*/}
-                <Nike/>
-            </div>
-        )
-    }
+    /*1. 虚拟DOM, 必须有一个根标签，且根标签内的标签必须闭合，因此用<div>包裹起来
+    * 2. 绑定样式时，不要用class, 要使用className,避免和ES6中的class关键字引发冲突
+    * 3. 使用内联样式时，用style={{key:value}}方式
+    * 4. 使用js表达式时，使用{}来获取
+    * 5. 标签首字母
+                 如果是小写开头，比如<div>，则将该标签转换为html中同名元素。若html中无该标签同名元素，则报错
+                 如果是大写开头，比如<Nike/>，则就去渲染对应的组件，若组件没定义，则报错*/
+    return (
+        <>
+            <div className='header'>我是食物</div>
+            <div style={{background: "blue"}}>我是第二个</div>
+            <button onClick={sayHello}>点我</button>
+            {name}
+            <Cat/>
+        </>
+    );
 }
+
+export default Food;
 ```
 
-### 2.1 数组/对象
+### 数组/对象
 
-- 传入的是数组，React会自动遍历
-- 传入的是对象，会解析失败Objects are not valid as a React child
+```tsx
+function Cat() {
+    /*数组，React会自动遍历*/
+    const cat: string[] = ['狸花', '美短', '大橘'];
+    /*对象：报错： Objects are not valid as a React child */
+    const people = {name: 'erick', age: 12};
+    return (
+        <>
+            <div>{cat}</div>
+            {/*<div>{people}</div>*/}
+        </>
 
-```jsx
-import {Component} from "react";
-import './citi.css'
-
-
-export default class Citi extends Component {
-    render() {
-
-        /*传入的是数组，React会自动遍历*/
-        let data = ['apple', 'peach', 'lemon']
-        /* 传入的是对象，会解析失败Objects are not valid as a React child */
-        //let people = {name: 'erick', age: 12, address: "xian"};
-
-        return (
-            <div>
-                {/*js表达式*/}
-                {data}
-            </div>
-        )
-    }
+    );
 }
+
+export default Cat;
 ```
 
-### 2.2 jsx规则
+### js表达式
 
 - jsx中，标签中内容需要引入js表达式，则需要用{}来使用
 
@@ -367,62 +205,112 @@ export default class Citi extends Component {
 ```
 
 ```jsx
-import {Component} from "react";
+function Cat() {
+    const cat: string[] = ['狸花', '美短', '大橘'];
+    return (
+        /*li中必须指定key，从而让DOM在比较时可以使用，可以用index*/
+        <div>
+            {cat.map((item, index) => (
+                <li key={index}>
+                    {item}
+                </li>
+            ))}
+        </div>
 
-export default class Citi extends Component {
-    render() {
-        let data = ['apple', 'peach', 'lemon']
-        return (
-            /*li中必须指定key，从而让DOM在比较时可以使用，可以用index*/
-            <div>
-                {data.map((item, index) => (
-                    <li key={index}>
-                        {item}
-                    </li>
-                ))}
-            </div>
-        )
-    }
+    );
 }
+
+export default Cat;
 ```
 
-## 3. 虚拟DOM
+## 5. Fragment
 
-- 虚拟DOM，本质是Object类型的对象(一般对象)
-- 虚拟DOM比较轻，真实DOM比较重。虚拟DOM是React内部使用，不需真实DOM那么多的属性
+- tsx中，函数式组件和类式组件，返回值都必须用一个闭合标签来包裹，因此多了很多不需要的div
+
+### 闭合标签
+
+```tsx
+const Cat = () => {
+    return (
+        <div>
+            <div>哈哈</div>
+            <div>嘿嘿</div>
+        </div>
+    )
+}
+
+export default Cat;
+```
+
+### 空标签
+
+- 空标签不能指定任何属性，会不在加对应的标签
+
+```tsx
+const Cat = () => {
+    return (
+        <>
+            <div>哈哈</div>
+            <div>嘿嘿</div>
+        </>
+    )
+}
+
+export default Cat;
+```
+
+### Fragment
+
+- 如果不想嵌套不必要的div，则可以使用React提供的Fragment
+- React在解析时候，会自动把Fragment去掉
+- 相比空标签，Fragment可以指定key，只能指定key，可以参与唯一标识的遍历
+
+```tsx
+import {Fragment} from "react/jsx-runtime";
+
+const Cat = () => {
+    return (
+        <Fragment key={0}>
+            <div>哈哈</div>
+            <div>嘿嘿</div>
+        </Fragment>
+    )
+}
+
+export default Cat;
+```
+
+
+
+
+
+## 5. 虚拟DOM
+
+- 本质是Object类型的对象(一般对象)
+- 虚拟DOM轻，真实DOM比较重。虚拟DOM是React内部使用，不需真实DOM那么多的属性
 - 虚拟DOM最终会被React转换为真实DOM，呈现在页面上
 
 ```js
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import App from './App';
+import {StrictMode} from 'react'
+import {createRoot} from 'react-dom/client'
+import App from './App.tsx'
 
-/*获取页面节点，并转换为虚拟DOM*/
-const root = ReactDOM.createRoot(document.getElementById('root'));
-console.log(`虚拟DOM`, root);
-console.log(typeof root);
+const root = createRoot(document.getElementById('root')!);
 
-let realDom = document.getElementById('root');
-console.log('真实DOM', realDom);
-
-/*将组件渲染到目标结点的页面上*/
 root.render(
-    /*使用React严格语法，比如react过时的api*/
-    <React.StrictMode>
+    <StrictMode>
         <App/>
-    </React.StrictMode>
+    </StrictMode>,
 );
+
+console.log("Virtual DOM", root);
+console.log("Virtual DOM Type", typeof root); // object
+
+const realDom = document.getElementById('root');
+console.log('Real Dom', realDom);
 ```
 
-## 4. DOM Differing 算法
-
-# 组件
-
-- 模块化：js的模块化，对js的拆分
-- 组件：对js，html，css，image，video，font等的进行拆分
-- 一个大的应用，所有的js，html等代码，都会划分为多个组件，多个组件拼接起来，就是一个完整的页面
-
-## 1. React开发工具
+## 6. React开发工具
 
 - 在谷歌浏览器中加入，后面可以在Component中，查看每个组件的具体的属性，组件树之间的关系
 
@@ -430,33 +318,40 @@ root.render(
 
 ![image-20240531140028704](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20240531140028704.png)
 
-## 2. 组件类型
+# 函数组件
 
-### 2.1 函数式组件
-
+- 模块化：js的模块化，对js的拆分
+- 组件：对js，html，css，image，video，font等的进行拆分
+- 一个大的应用，所有的js，html等代码，都会划分为多个组件，多个组件拼接起来，就是一个完整的页面
 - React18后，新特性可以使用组件的一些特性，官方比较推荐，代码复用率高
+
+## 基本写法
+
+### 普通函数
 
 ```jsx
 /*  渲染组件到页面
-   * 1. React解析组件标签，找到了NikeComponent组件
+   * 1. React解析组件标签，找到了Cat组件
    * 2. 发现是组件是使用函数定义的，调用该函数
    * 3. 将返回的该组件的虚拟DOM转换为真实DOM,随后呈现在页面*/
-export function NikeComponent() {
+export default function Father() {
     /*1. 必须要有返回值，返回值就是该组件的虚拟DOM
     * 2. 首字母不要用小写，否则会当作html标签渲染
-    *    首字母大写，就会当作组件来渲染*/
+         首字母大写，就会当作组件来渲染*/
     return (
+        /*li中必须指定key，从而让DOM在比较时可以使用，可以用index*/
         <div>
-            Hi,我是函数式组件
+            Hi, 我是函数式组件
         </div>
-    )
+
+    );
 }
 ```
 
-- 箭头函数类型，和函数式组件是一样的，不再细说
+### 箭头函数
 
 ```jsx
-export const AdidasComponent = () => {
+export const Father = () => {
     return (
         <div>
             我是箭头函数组件
@@ -465,255 +360,466 @@ export const AdidasComponent = () => {
 }
 ```
 
-### 2.2 类式组件
+## State
 
-- React16中，因为一些局限，用的比较多
-- rcc：快捷键生成一个类式组件
+- 当前组件的一些状态，属性，
+- 属性如果需要在页面显示，那么使用state。否则就考虑使用ref，避免页面的重复渲染问题
 
-```js
-import {Component} from "react";
+### 1. 单一属性
 
-/* 渲染组件到页面
-   * 1. React解析组件标签，找到了Citi组件
-   * 2. 发现组件是使用类定义的，随后new出该类的实例，并通过该实例调用到原型上的render方法
-   * 3. 将render返回的虚拟DOM转换为真实DOM,随后呈现在页面上*/
-export default class Citi extends Component {
-    /*1. render：Citi组件的的原型对象上，供实例使用*/
-    render() {
-        /*this: Citi的实例对象*/
-        console.log("Citi实例对象", this);
-        return (
-            <div>
-                我是类式组件
-            </div>
-        )
+```tsx
+import React from "react";
+import {nanoid} from "nanoid";
+
+export default function Food() {
+    /*Food函数执行n+1次
+    *   1. 初次渲染执行一次
+    *   2. 后续每次任意一个state属性改变，执行一次*/
+    console.log("Food executing");
+
+    /*初始值
+    * 返回一个数组，第一个是属性，第二个是修改属性的方法
+    * 数组的解构赋值*/
+    const [name, setName] = React.useState<string>("erick");
+    const [address, setAddress] = React.useState<string>(nanoid(5));
+
+    /*不能直接调用上面的setName和setAddress，必须用一个函数包裹起来*/
+
+    /*写法一：传入一个函数*/
+    const changeName = () => {
+        setName((previous) => {
+            return previous + "~";
+        })
+    };
+
+    /*写法二：传入一个更新后的值*/
+    const changeAge = () => {
+        setAddress(nanoid(5));
     }
+
+    return (
+        <>
+            <h2>姓名{name}</h2>
+            <button onClick={changeName}>改变姓名</button>
+            <h2>地址{address}</h2>
+            <button onClick={changeAge}>改变地址</button>
+        </>
+    );
 }
 ```
 
-## 3. Fragment
+### 2. 对象属性
 
-- jsx中，函数式组件和类式组件，返回值都必须用一个闭合标签来包裹，因此多了很多不需要的div
+```tsx
+import {BaseSyntheticEvent, useState} from "react";
 
-### 3.1 闭合标签
+export interface People {
+    username: string;
+    password: string;
+    address: string;
+}
 
-```jsx
-import React from "react";
+export default function Food() {
+    console.log("Food executing");
+    const [people, setPeople] = useState<People>({} as People);
 
-export function RefHook() {
+    const peopleChange = (type: string) => {
+        return (event: BaseSyntheticEvent) => {
+            setPeople({
+                /*原对象解构*/
+                ...people,
+                /* 新属性覆盖*/
+                [type]: event.target.value,
+            })
+        }
+    }
+
     return (
-        <div id='ref'>
-            我是组件
+        <>
+            <div>{people.username}===={people.address}===={people.password}</div>
+            姓名:<input onChange={peopleChange('username')}/><br/>
+            密码:<input onChange={peopleChange('password')}/><br/>
+            地址:<input onChange={peopleChange('address')}/><br/>
+        </>
+    );
+}
+```
+
+### 3. 更新方式
+
+- 方法调用是同步的，更新操作是异步更新
+
+```bash
+1. state更新操作按钮
+2. state发生了改变
+3. 函数组件重新调用，从而触发整个页面重新render
+```
+
+```tsx
+import {useState} from "react";
+
+export default function Food() {
+    console.log('Food executing')
+    const [count, setCount] = useState(0);
+
+    const updateCount = () => {
+        setCount((previous) => {
+            return previous + 1;
+        })
+        /*异步更新：原来是0，异步更新，这里打印出来就还是0*/
+        console.log('当前数据', count);
+    }
+
+    return (
+        /*进行到return的时候，已经异步更新完毕了*/
+        <div>
+            <h2>当前计数{count}</h2>
+            <button onClick={updateCount}>改变计数器</button>
         </div>
     )
 }
 ```
 
-![image-20240608215936037](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20240608215936037.png)
+## useEffect
 
-### 3.2 空标签
 
-- 空标签不能指定任何属性
 
-```jsx
-import React, {Fragment} from "react";
+## Props
 
-export function RefHook() {
+- 组件之间的状态传递，父组件向子组件传递属性，方法
+
+### 1. 值/函数
+
+#### 普通函数
+
+```tsx
+import {BaseSyntheticEvent, useState} from "react";
+import Son from "./Son.tsx";
+
+export default function Father() {
+    const [age, setAge] = useState<number>(0);
+    const [username, setUsername] = useState<string>("lucy");
+
+    const firstMethod = () => {
+        console.log("first method")
+    }
+
+    /*普通写法*/
+    const secondMethod = (city: string, year: number): string => {
+        console.log("second method", city, year);
+        return `${city}, ${year}`;
+    }
+
+    /*函数柯里化写法*/
+    const thirdMethod = (city: string, year: number) => {
+        return (event: BaseSyntheticEvent) => {
+            console.log(event)
+            console.log("third method", city, year);
+        }
+    }
+
+    return (
+        <div>
+            <Son age={age} username={username} say={firstMethod} work={secondMethod} hardWork={thirdMethod}/>
+        </div>
+    );
+}
+```
+
+```tsx
+import {BaseSyntheticEvent} from "react";
+
+interface SonProps {
+    age: number;
+    username?: string; /*可选属性*/
+    /*无参无返回值: 普通函数即可*/
+    say: () => void;
+    /*有参有返回值*/
+    work: (city: string, year: number) => string;
+    /*柯里化*/
+    hardWork: (city: string, year: number) => (event: BaseSyntheticEvent) => void;
+}
+
+export default function Son(props: SonProps) {
+    /*结构赋值*/
+    const {age, username, say, work, hardWork} = props;
+
     return (
         <>
-            我是组件
+            <h2>年龄{age}</h2>
+            <h2>姓名{username}</h2>
+            {/*不带括号： 将一个函数的指向作为回调*/}
+            <button onClick={say}>无参数</button>
+
+            {/*非柯里化写法*/}
+            <button onClick={() => {
+                return work('北京', 2025);
+            }}>有参数普通写法
+            </button>
+
+            {/*柯里化写法*/}
+            <button onClick={
+                hardWork("南京", 2024)
+            }>柯里化写法
+            </button>
+        </>
+    );
+}
+```
+
+#### 箭头函数
+
+```tsx
+import {BaseSyntheticEvent, FC} from "react";
+
+interface SonProps {
+    age: number;
+    username?: string;
+    say: () => void;
+    work: (city: string, year: number) => string;
+    hardWork: (city: string, year: number) => (event: BaseSyntheticEvent) => void;
+}
+
+export const Son: FC<SonProps> = (props) => {
+    const {age, username, say, work, hardWork} = props;
+
+    return (
+        <>
+            <h2>年龄{age}</h2>
+            <h2>姓名{username}</h2>
+            <button onClick={say}>无参数</button>
+
+            <button onClick={() => {
+                return work('北京', 2025);
+            }}>有参数普通写法
+            </button>
+
+            <button onClick={
+                hardWork("南京", 2024)
+            }>柯里化写法
+            </button>
+        </>
+    );
+}
+```
+
+### 2. children
+
+#### Html标签
+
+- 组件嵌套的内容，如果是html标签，标签体内部的东西则可以直接渲染
+
+```tsx
+import Son from "./Son.tsx";
+
+export default function Father() {
+    return (
+        <div>
+            <div>我是父组件</div>
+            {/*组件标签内的东西：是普通的html*/}
+            <Son><h1>Hi Son</h1></Son>
+        </div>
+    )
+}
+```
+
+```tsx
+import * as React from "react";
+
+interface SonProps {
+    /*children的类型*/
+    children: React.ReactNode;
+}
+
+export default function Son(props: SonProps) {
+    /*从props中接收*/
+    return (
+        <>叫我？{props.children}</>
+    )
+}
+```
+
+#### 组件标签
+
+```tsx
+import Father from "./component/cat/Father.tsx";
+import Son from "./component/cat/Son.tsx";
+
+function App() {
+    return (
+        <>
+            <Father>
+                <Son/>
+            </Father>
+        </>
+    )
+}
+
+export default App
+```
+
+```tsx
+import * as React from "react";
+
+interface FatherProps {
+    children?: React.ReactNode
+}
+
+export default function Father(props: FatherProps) {
+    return (
+        <div>
+            <div>我是父组件</div>
+            <div>{props.children}</div>
+        </div>
+    )
+}
+```
+
+```tsx
+export default function Son() {
+    return (
+        <>我是儿子</>
+    )
+}
+```
+
+## Ref
+
+- 维护组件的属性，状态，如果这种属性不直接被页面渲染所需要，则可以考虑使用ref，比如页面的查询条件
+
+### 1. HTML标签
+
+```tsx
+import {useRef} from "react";
+
+export default function App() {
+    // 专人专用，保存一个数据
+    const userNameRef = useRef<HTMLInputElement>({} as HTMLInputElement);
+    const ageRef = useRef<HTMLInputElement>({} as HTMLInputElement);
+
+
+    const check = () => {
+        console.log(userNameRef.current.value);
+        console.log(ageRef.current.value);
+    }
+
+    return (
+        <>
+            姓名： <input ref={userNameRef} type={'text'} placeholder={'请输入姓名'}/>
+            年龄: <input ref={ageRef} type={"number"} placeholder={'请输入年龄'}/>
+            <button onClick={check}>点击查看</button>
         </>
     )
 }
 ```
 
-![image-20240608220421807](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20240608220421807.png)
+- 尽量少用ref，发生事件的事件源和输入框如果是一个，使用event
 
-### 3.3 Fragment
+```tsx
+import {BaseSyntheticEvent} from "react";
 
-- 如果不想嵌套不必要的div，则可以使用React提供的Fragment
-- React在解析时候，会自动把Fragment去掉
-- 相比空标签，Fragment可以指定key，只能指定key，可以参与唯一标识的遍历
+export default function App() {
 
-```jsx
-import React, {Fragment} from "react";
+    const check = (event: BaseSyntheticEvent) => {
+        console.log(event.target.value);
+    }
 
-export function RefHook() {
     return (
-        <Fragment key={1}>
-            我是组件
-        </Fragment>
+        <>
+            姓名： <input type={'text'} placeholder={'请输入姓名'} onBlur={check}/>
+        </>
     )
 }
 ```
 
-![image-20240608220247923](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20240608220247923.png)
+### 2. 保存数据
 
-## 4. 类式组件this问题
+- 存放不用于触发页面重新渲染的可变数据
+- 数据会进行缓存。如果页面因为state触发了重新渲染，Ref之前保存的数据也不会丢失
 
-### 4.1 普通函数-this指向
+```tsx
+import {useRef} from "react";
 
-```html
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+export default function App() {
 
-<script>
-    function demo01() {
-        console.log(this); // windows
+    console.log("render...")
+
+    const counter = useRef<number>(0);
+
+    /*ref数据改变后，页面不会重选渲染*/
+    const changeCounter = () => {
+        counter.current += 1;
+        console.log(counter.current);
     }
 
-    function demo02() {
-        'use strict';
-        console.log(this) // undefined, 禁止this向上寻找
-    }
-
-    demo01();
-    demo02();
-</script>
-
-</body>
-</html>
-```
-
-### 4.2 类中普通函数-this指向
-
-- this指向丢失问题：直接调用方法，会导致类中方法的this丢失
-
-```html
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
-
-<script>
-    class People {
-        constructor(name, age) {
-            this.name = name;
-            this.age = age;
-        }
-
-        /* speak方法放在： 类的原型对象上，供实例调用*/
-        speak() {
-            console.log(this);
-            console.log('speak---');
-        }
-    }
-
-    /*1. 调用方式一： 通过People的实例调用speak时，this就是People实例*/
-    let people = new People('shuzhan', 20);
-    people.speak();
-
-    /* 2， 调用方式二：直接调用方法： 里面的this就是undefined
-    *     2.1 类中所有的方法，都在局部开启了严格模式，this不会向上找，不会指向windows */
-
-    let x = people.speak;       // 顺着people的原型链查找，找到speak方法，并用x接收了该方法
-    x(); // 调用,  方法的直接调用
-</script>
-
-</body>
-</html>
-```
-
-### 4.3 类式组件中this丢失
-
-```jsx
-import {Component} from "react";
-
-export default class Citi extends Component {
-
-    changeWhether() {
-        /*this: undefined*/
-        console.log(this);
-    }
-
-    render() {
-        return (
-            <div>
-                {/*React中，对js原生的BOM事件，都进行了驼峰封装: onclick-->onClick*/}
-                {/* 1. 沿着类的原型链查找，找到了changeWhether方法，
-                    2. 并将其作为回调函数供onClick调用
-                    3. 不算是实例调用，因此changeWhether() 就不是通过实例调用的
-                    4. 类中方法默认开启了严格模式，因此this就是undefined*/}
-                <button onClick={this.changeWhether}>改变天气</button>
-            </div>
-        )
-    }
+    return (
+        <>
+            <button onClick={changeCounter}>加一</button>
+        </>
+    )
 }
 ```
 
-### 4.4 类式组件this找回一
+### 3. 使用场景
 
-- 通过bind找回
+- 组件需要存储一些值，但当前值不会进行页面渲染，请选择 ref
 
-```jsx
-import {Component} from "react";
+```tsx
+import {useRef} from "react";
+import Son from "./Son.tsx";
 
-export default class Citi extends Component {
+export interface People {
+    name: string;
+}
 
-    constructor(props) {
-        super(props);
-        /*右边：
-        * 1. 根据原形链，找到changeWhether方法
-        * 2. bind：2.1生成一个新的函数
-        *          2.2修改该函数中的this指针：传递什么，this就是什么
-        * 左边：
-        *  1. 一个新函数：名字为change，是changeWhether的引用
-        *  2. 且修改了原来changeWhether中的this指向*/
-        this.change = this.changeWhether.bind(this);
+export default function Father() {
+    console.log("父页面渲染")
+
+    const queryCondition = useRef<People>({} as People);
+
+    const updateQueryCondition = (people: People) => {
+        queryCondition.current = people;
     }
 
-    changeWhether() {
-        /*this: 实例*/
-        console.log(this);
-    }
-
-    render() {
-        return (
-            <div>
-
-                {/*1. 实例自身上的change()方法，实际调用的是
-                   2. 如果change和changeWhether同名了，那就先找到了当前对象的changeWhether，就不会继续向上找了*/}
-                <button onClick={this.change}>改变天气</button>
-            </div>
-        )
-    }
+    return (
+        <>
+            <Son updateQueryCondition={updateQueryCondition}/>
+        </>
+    )
 }
 ```
 
-### 4.5 类式组件this找回二
+```tsx
+import {People} from "./Father.tsx";
+import {useState} from "react";
 
-- 通过箭头函数加+赋值语句找回
+interface SonProps {
+    updateQueryCondition: (people: People) => void;
+}
 
-```jsx
-import {Component} from "react";
+export default function Son(props: SonProps) {
+    console.log("子页面渲染");
 
-export default class Citi extends Component {
+    /*state属性修改后，子页面就会重新渲染，但是并不想让父页面也被渲染*/
+    const [name, setName] = useState<string>("");
 
-    /*1. 类中定义了一个方法，在实例对象上增加了一个changeWhether属性，而不是在类的原型对象上
-    * 2. changeWhether属性是一个箭头函数
-    * 3. 箭头函数中没有this，向上找*/
-
-    changeWhether = () => {
-        /*Citi的实例对象*/
-        console.log(this);
+    const handleClick = () => {
+        props.updateQueryCondition({
+            name: name,
+        })
     }
 
-    render() {
-        return (
-            <div>
-                <button onClick={this.changeWhether}>改变天气</button>
-            </div>)
-    }
+    return (
+        <>
+            姓名: <input type="text" onBlur={(e) => setName(e.target.value)}/>
+            {/*点击后，父页面也不会重选渲染*/}
+            <button onClick={handleClick}>提交</button>
+        </>
+    )
 }
 ```
+
+
 
 # 类组件
 
@@ -1538,145 +1644,9 @@ export class Father extends PureComponent {
 }
 ```
 
-
-
 # 函数组件
 
-- React官方比较推荐的组件定义方式
-
-## 1. State
-
-- 当前组件的一些状态，属性，等
-- React-18中，在函数式组件中，可以使用state属性
-- 属性如果需要在页面显示，那么就可以使用state。否则就可以考虑使用ref，避免页面的重复渲染问题
-
-```bash
-# 方法调用是同步的，更新操作是异步更新
-1. state更新操作
-2. state发生了改变
-3. 函数组件重新调用，从而触发整个页面重新render
-```
-
-### 1.1 单一属性
-
-```tsx
-import {nanoid} from "nanoid";
-import React from "react";
-
-/* Mall 函数执行 n+1 次
-*     1. 初次渲染执行一次
-*     2. 后续每次改变state属性，执行一次*/
-export default function Mall() {
-    console.log('mall')
-
-    /* 2. 第一次调用，就会把count结果缓存下来
-            *     后续调用，就不会再去执行了*/
-    /*参数：初始值
-    * 返回：一个数组，第一个是属性，第二个是修改属性的方法
-    * 数组的解构赋值*/
-    const [count, setCount] = React.useState(0);
-    const [time, setTime] = React.useState(nanoid(5));
-    
-    /*setCount不能直接调用，必须用一个函数来包裹后，提供给其他地方回调*/
-
-    /*写法一： setCount传入一个函数*/
-    function updateCount() {
-        setCount((previous) => {
-            return previous + 1;
-        })
-    }
-
-    /*写法二： setTime传入一个更新后的新值*/
-    function updateTime() {
-        setTime(nanoid(5));
-    }
-
-    return (
-        <div>
-            <h2>当前计数{count}</h2>
-            <button onClick={updateCount}>改变计数器</button>
-            <h2>当前时间{time}</h2>
-            <button onClick={updateTime}>更改时间</button>
-        </div>
-    )
-}
-```
-
-### 1.2 对象写法
-
-```tsx
-import React from "react";
-
-interface People {
-    username: string,
-    password: string,
-    address?: string,
-    age: string;
-}
-
-export default function Mall() {
-
-    /*定义数据类型*/
-   // 对象数组  const [data, setData] = React.useState<People[]>([{}]);
-    const [data, setData] = React.useState<People>({
-        username: '',
-        password: '',
-        address: '',
-        age: ''
-    });
-
-    function handleChange(type: string) {
-        return (event: any) => {
-            setData({
-                /*原对象解构*/
-                ...data,
-                /*新属性覆盖*/
-                [type]: event.target.value,
-            })
-        }
-    }
-    
-    return (
-        <div>
-            姓名：<input onChange={handleChange('username')}/><br/>
-            密码：<input onChange={handleChange('password')}/><br/>
-            地址：<input onChange={handleChange('address')}/><br/>
-            年龄：<input onChange={handleChange('age')}/><br/>
-        </div>
-    );
-}
-```
-
-### 1.3 更新方式
-
-- 进行到return的时候，已经异步更新完毕了
-
-#### 异步更新
-
-```tsx
-import React from "react";
-
-export default function Mall() {
-    console.log('mall')
-
-    const [count, setCount] = React.useState(0);
-
-    function updateCount() {
-        setCount((previous) => {
-            return previous + 1;
-        })
-        /*异步更新：原来是0，异步更新，这里打印出来就还是0*/
-        console.log('当前数据', count);
-    }
-
-    return (
-        <div>
-            <h2>当前计数{count}</h2>
-            <button onClick={updateCount}>改变计数器</button>
-        </div>
-    )
-}
-```
+## State
 
 #### 同步调用-useEfffect
 
@@ -1742,356 +1712,6 @@ export default function Mall() {
             <button onClick={updateCount}>改变计数器</button>
         </div>
     )
-}
-```
-
-## 2. Props
-
-- 组件之间的状态传递，父子组件传递属性，方法等
-
-### 2.1 传值/函数
-
-- 父组件在调用子组件的时候，可以给子组件传递一些值，函数
-- 值和函数的类型限制，需要在子组件中进行声明，借助TS的类型说明
-- 可以在普通函数中写箭头函数
-- 回调函数带()，就要考虑用高阶函数或者高阶函数的其他写法
-
-#### 普通函数
-
-```tsx
-import React, {BaseSyntheticEvent} from "react";
-import Son from "./Son";
-
-export default function Mall() {
-
-    const [age, setAge] = React.useState(1);
-    const [address, setAddress] = React.useState('');
-
-    function firstMethod() {
-        console.log('first-method');
-    }
-
-    /*高阶函数，柯里化写法*/
-    function secondMethod(data: number) {
-        return function (event: BaseSyntheticEvent) {
-            console.log(data);
-            console.log(event);
-        }
-    }
-
-    function thirdMethod(data: number, event: BaseSyntheticEvent) {
-        console.log(data);
-        console.log(event)
-    }
-
-    return (
-        <div>
-            <Son address={address} age={age}
-                 firstMethod={firstMethod}
-                 secondMethod={secondMethod}
-                 thirdMethod={thirdMethod}/>
-        </div>
-    );
-}
-```
-
-```jsx
-import {BaseSyntheticEvent} from "react";
-
-interface SonProps {
-    /*可选属性，就可以不用必须传递*/
-    address?: string;
-    age: number;
-    /*无参，无返回值*/
-    firstMethod: () => void;
-
-    /*柯里化函数，返回值也是一个函数*/
-    secondMethod: (data: number) => (event: BaseSyntheticEvent) => void;
-
-    /*普通函数*/
-    thirdMethod: (data: number, event: BaseSyntheticEvent) => void;
-}
-
-export default function Son(props: SonProps) {
-    const {address, age, firstMethod, secondMethod, thirdMethod} = props
-
-    return (
-        <div>
-            {/*不带括号：将一个函数的指向作为回调*/}
-            <button onClick={firstMethod}>firstMethod</button>
-
-            {/*带括号：是将函数的返回值作为回调函数*/}
-
-            {/* 1. 返回值也是一个函数，并且React会自动把event传递给返回的函数*/}
-            <button onClick={secondMethod(1)}>secondMethod</button>
-
-            {/*2. 非柯里化写法*/}
-            <button onClick={function (event) {
-                return thirdMethod(1, event)
-            }}>thirdMethod
-            </button>
-        </div>
-    );
-}
-```
-
-#### 箭头函数
-
-```tsx
-import React, {BaseSyntheticEvent} from "react";
-import {Son} from "./Son";
-
-export const Mall = () => {
-    const [age, setAge] = React.useState(1);
-    const [address, setAddress] = React.useState('');
-
-    const firstMethod = () => {
-        console.log('first-method');
-    }
-
-    /*高阶函数，柯里化写法*/
-    const secondMethod = (data: number) => {
-        return (event: BaseSyntheticEvent) => {
-            console.log(data);
-            console.log(event);
-        }
-    }
-
-    /*非柯里化写法*/
-    const thirdMethod = (data: number, event: BaseSyntheticEvent) => {
-        console.log(data);
-        console.log(event)
-    }
-
-    return (
-        <div>
-            <Son address={address} age={age}
-                 firstMethod={firstMethod}
-                 secondMethod={secondMethod}
-                 thirdMethod={thirdMethod}/>
-        </div>
-    );
-};
-```
-
-```tsx
-import React, {BaseSyntheticEvent} from "react";
-
-interface SonProps {
-    /*可选属性，就可以不用必须传递*/
-    address?: string;
-    age: number;
-    /*无参，无返回值*/
-    firstMethod: () => void;
-
-    /*柯里化函数，返回值也是一个函数*/
-    secondMethod: (data: number) => (event: BaseSyntheticEvent) => void;
-
-    /*普通函数*/
-    thirdMethod: (data: number, event: BaseSyntheticEvent) => void;
-}
-
-export const Son: React.FC<SonProps> = (props) => {
-    const {address, age, firstMethod, secondMethod, thirdMethod} = props
-
-    return (
-        <div>
-
-            <button onClick={firstMethod}>firstMethod</button>
-            <button onClick={secondMethod(1)}>secondMethod</button>
-
-            <button onClick={(event) => {
-                thirdMethod(1, event);
-            }}>thirdMethod
-            </button>
-        </div>
-    );
-}
-```
-
-### 2.2 props.children
-
-- 组件嵌套的内容，如果是html标签，标签体内部的东西则可以直接渲染
-- 如果是组件标签，标签体内部的东西需要子组件从props.children中接收才能渲染
-
-```jsx
-import {Son} from "./Son";
-
-export function Father() {
-
-    return (
-        <div>
-            <div>我是父组件</div>
-            <Son>Hi,Son</Son>
-        </div>
-    )
-}
-```
-
-```jsx
-export function Son(props) {
-    /*从props中接收*/
-    return (
-        <>叫我？{props.children}</>
-    )
-}
-```
-
-
-
-## 3. Ref
-
-- React18引入的Hook，可以使用ref
-- 可以维护组件的属性，状态，如果这种属性不直接被页面渲染所需要，则可以考虑使用ref，比如页面的查询条件
-
-### 3.1 ref
-
-```jsx
-import React from "react";
-
-export function RefHook() {
-    // 专人专用，保存一个数据
-    const usernameRef = React.useRef();
-
-    function show() {
-        alert(usernameRef.current.value);
-    }
-
-    return (
-        <div>
-            姓名：<input ref={usernameRef} type="text" placeholder="请输入姓名"/>
-            <button onClick={show}>点击提示姓名</button>
-        </div>
-    )
-}
-```
-
-### 3.2 事件
-
-- 尽量少用ref，发生事件的事件源和输入框如果是一个，使用event
-
-```jsx
-export function Erick() {
-
-    function getAddress(event) {
-        /*event.target: 真实结点*/
-        alert(event.target.value);
-    }
-
-    return (
-        <div>
-            <input type="text" placeholder="请输入地址" onBlur={getAddress}/>
-        </div>
-    )
-}
-```
-
-### 3.3 保存数据
-
-- 存放不用于触发更新的可变数据
-- Ref可以保存数据，数据更改后不会触发整个Mall的函数的重新渲染
-- Ref保存的数据，也会进行缓存。如果页面因为state触发了重新渲染，Ref之前保存的数据也不会丢失
-
-```tsx
-import React from "react";
-
-export default function Mall() {
-    console.log('render')
-
-    let counter = React.useRef(0);
-
-    const handleClickRef = () => {
-        counter.current += 1;
-        console.log(counter.current)
-    }
-
-    return (
-        <div>
-            <h1>我是customer</h1>
-            <br/>
-            <button onClick={handleClickRef}>改变Ref</button>
-        </div>
-    );
-}
-```
-
-
-
-### 3.3 使用场景
-
-- 如果你的组件需要存储一些值，但不影响渲染逻辑，请选择 ref
-
-```bash
-#   const queryCondition = React.useRef<CustomerEntity>();
-- 返回一个具有单个current属性的ref对象
-- current属性可以改变
-- 改变ref，不会触发重新渲染
-- 更新是同步的
-
-# 使用场景: 
-- 1. 存储在组件中需要多次改变，但又不需要渲染到页面上的数据。    如查询条件，缓存的请求结果
-```
-
-```tsx
-import React from "react";
-import Search from "./Search";
-
-
-export type Person = {
-    name: string
-}
-export default function Mall() {
-    console.log('父页面渲染')
-
-    const queryCondition = React.useRef<Person>({
-        name: '',
-    });
-
-    const saveQueryCondition = (condition: Person) => {
-        queryCondition.current = condition;
-    }
-
-    return (
-        <div>
-            <Search saveQueryCondition={saveQueryCondition}/>
-        </div>
-    )
-}
-```
-
-```tsx
-import React from "react";
-import {Person} from "./Mall";
-
-type SearchProps = {
-    saveQueryCondition: (condition: Person) => void;
-}
-
-export default function Search(props: SearchProps) {
-    console.log('子页面渲染')
-
-    /*state属性修改后，页面就会渲染，但是并不想让父页面也被渲染*/
-    const [name, setName] = React.useState('');
-
-    const {saveQueryCondition} = props;
-
-    /*调用父组件传递过来的函数*/
-    const handleClick = () => {
-        saveQueryCondition({
-            name: name,
-        });
-    }
-
-    const handleInput = (event: any) => {
-        setName(event.target.value)
-    }
-
-    return (
-        <div>
-            姓名：<input type='text' onChange={handleInput}/>
-            <button onClick={handleClick}>点击保存</button>
-        </div>
-    );
 }
 ```
 

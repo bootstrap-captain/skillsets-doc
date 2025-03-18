@@ -1,5 +1,4 @@
 - 6版本和5版本差距比较大
-- React明确推荐：函数式组件
 - [官网](https://reactrouter.com/en/main)
 
 ```bash

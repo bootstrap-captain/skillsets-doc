@@ -111,6 +111,12 @@ npm run build:mp-weixin
 
 # UI组件
 
+## view
+
+- 小程序的专门的组件，类似于div，并不会有任何的
+
+
+
 ## uni-ui
 
 - [组件UI官网](https://zh.uniapp.dcloud.io/component/)
@@ -153,7 +159,61 @@ npm i sass
 
 - 在对应的组件中，数据加载完毕后再渲染页面，否则渲染骨架屏
 
+## 分包/预下载
 
+```bash
+# 分包
+- 将小程序的代码分割为多个部分，分别打包成多个小程序包，减少小程序的加载时间，提高用户体验
 
+# 分包预下载
+- 在进入小程序某个页面时，框架自动预下载可能需要的分包，提升进入后续分包页面时候的启动速度
+```
 
+### 目录
+
+- 在src下面
+
+![image-20250313123827696](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250313123827696.png)
+
+### page.json配置
+
+```json
+  /*子包配置*/
+  "subPackages": [
+    /*子包一*/
+    {
+      /*子包的根路径*/
+      "root": "pagesMember",
+      /*页面路径和窗口表现*/
+      "pages": [
+        {
+          "path": "settings/settings",
+          "style": {
+            "navigationBarTitleText": "设置"
+          }
+        }
+      ]
+    }
+  ],
+  /*分包预下载规则*/
+  "preloadRule": {
+    /*进入主包某个页面时*/
+    "pages/user/user": {
+      /*所有网络，可设置为wifi*/
+      "network": "all",
+      "packages": ["pagesMember"]
+    }
+  }
+```
+
+### 检验
+
+- 点击其他页面，分包不会预下载
+- 点击到目标页面时候，控制台会有
+- 分包体积越大，效果越好
+
+```bash
+preloadSubpackages: pagesMember
+preloadSubpackages: success
+```
 
