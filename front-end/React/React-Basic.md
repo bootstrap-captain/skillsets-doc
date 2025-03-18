@@ -1145,6 +1145,170 @@ export default function Son(props: SonProps) {
 }
 ```
 
+## Render顺序
+
+### 父子组件
+
+- 渲染父组件，接着渲染子组件，不管子组件有没有使用父组件的状态(DFS)
+- 父组件一旦重新渲染，就会触发所有的子组件渲染，不管子组件是否用到父组件的数据
+
+```tsx
+import {useState} from "react";
+import FirstSon from "./FirstSon.tsx";
+import SecondSon from "./SecondSon.tsx";
+
+export default function Father() {
+    const [name, setName] = useState('lucy');
+
+    const changeName = () => {
+        setName((prevState) => {
+            return prevState + '~';
+        });
+    }
+    return (
+        <>
+            <FirstSon/>
+            <SecondSon name={name}/>
+            {/*父组件一旦重新渲染，就会触发所有的子组件渲染，不管子组件是否用到父组件的数据*/}
+            <button onClick={changeName}>父组件state改变</button>
+        </>
+    )
+}
+```
+
+```tsx
+export default function FirstSon() {
+    console.log('FirstSon Render');
+    return (
+        <div>first son</div>
+    )
+}
+```
+
+```tsx
+interface SecondSonProps {
+    name: string;
+}
+
+export default function SecondSon(props: SecondSonProps) {
+    console.log('SecondSon Render');
+    return (
+        <div>{props.name}</div>
+    );
+}
+```
+
+### 单一state改变
+
+- 父组件的state改变后，就会触发对应的重新渲染
+
+```tsx
+import {useState} from "react";
+import {FirstSon} from "./FirstSon";
+import {SecondSon} from "./SecondSon";
+
+export function Father() {
+    const [address, setAddress] = useState('XIAN');
+
+    /*方式一：给了新属性，但值一样，不会重新render*/
+    function changeName() {
+        setAddress('XIAN');
+    }
+
+    /*方式二：给了新属性，但值变了，会重新render父组件及所有子组件*/
+    function changeName01() {
+        setAddress('BEIJING');
+    }
+
+    /*方式三：直接返回了旧的值，不重新render*/
+    function changeName02() {
+        setAddress(previous => {
+            return previous;
+        })
+    }
+
+    /*方式四：旧值更新*/
+    function changeName03() {
+        setAddress(previous => {
+            return previous + 'adf';
+        })
+    }
+
+    console.log('Father-Render')
+    return (
+        <div>
+            <h2>父亲：{address}</h2>
+
+            <button onClick={changeName03}>更换姓名</button>
+            <br/>
+            <FirstSon/>
+            <SecondSon address={address}/>
+        </div>
+    )
+}
+```
+
+### 对象state改变
+
+```tsx
+import {useState} from "react";
+import {FirstSon} from "./FirstSon";
+import {SecondSon} from "./SecondSon";
+
+export function Father() {
+    const [data, setData] = useState({
+        name: 'erick',
+        age: 20
+    })
+
+    /*方式一：重新赋值，不管值是否相同，都会重新render*/
+    function changeInfo01() {
+        setData({
+            name: 'erick',
+            age: 20
+        })
+    }
+
+    /*方式二：返回原对象，不会render*/
+    function changeInfo02() {
+        setData((previous) => {
+            return previous;
+        })
+    }
+
+    /*方式三：返回原对象，对象值变了，不会render*/
+    function changeInfo03() {
+        setData((previous) => {
+            previous.name = 'lucy';
+            return previous;
+        })
+    }
+
+    /*方式四：返回新对象，哪怕新对象值和之前不变，也会render*/
+    function changeInfo04() {
+        setData((previous) => {
+            let newVal = {
+                name: previous.name,
+                age: previous.age
+            }
+            return newVal;
+        })
+    }
+
+    console.log('Father-Render')
+    return (
+        <div>
+            <h2>父亲：{data.name}{data.age}</h2>
+
+            <button onClick={changeInfo04}>更换信息</button>
+            <br/>
+            <FirstSon/>
+            <SecondSon address={data.address} age={data.age}/>
+        </div>
+    )
+}
+```
+
 
 
 # 类组件
@@ -1970,214 +2134,6 @@ export class Father extends PureComponent {
 }
 ```
 
-# 函数组件
-
-## State
-
-#### 同步调用-useEfffect
-
-- 借助副作用钩子，获取到最新值
-
-```tsx
-import React from "react";
-
-export default function Mall() {
-    const [count, setCount] = React.useState(0);
-
-    function updateCount() {
-        setCount((previous) => {
-            return previous + 1;
-        })
-    }
-
-    /*1. 页面第一次加载完毕后，调用一次
-    * 2. 后续监测的值发生改变，再调用一次*/
-    React.useEffect(() => {
-        console.log('count', count)
-    }, [count]);
-    
-    console.log('mall')
-
-    return (
-
-        <div>
-            <h2>当前计数{count}</h2>
-            <button onClick={updateCount}>改变计数器</button>
-        </div>
-    )
-}
-```
-
-#### 同步调用-useRef
-
-- 借助ref，可以获取到最新的值
-- 在维护state属性的时候，可以在对该属性维护一个ref
-
-```tsx
-import React from "react";
-
-export default function Mall() {
-    const [count, setCount] = React.useState(0);
-    const countRef = React.useRef<number>();
-
-    function updateCount() {
-        let newNumber = 10;
-        setCount(10)
-        countRef.current = 10;
-        log();
-    }
-
-    /*假如调用完了上面的方法，立刻要使用到count的值，就可以用countRef*/
-    function log() {
-        console.log(countRef.current)
-    }
-
-    return (
-        <div>
-            <h2>当前计数{count}</h2>
-            <button onClick={updateCount}>改变计数器</button>
-        </div>
-    )
-}
-```
-
-## 6. render次数
-
-- 因为父组件的state属性变化，导致子组件的props变化
-
-### 6.1 单一属性更改
-
-- 第一次加载：渲染父组件，接着渲染子组件，不管子组件有没有使用父组件的状态
-
-```jsx
-import {useState} from "react";
-import {FirstSon} from "./FirstSon";
-import {SecondSon} from "./SecondSon";
-
-export function Father() {
-    const [address, setAddress] = useState('XIAN');
-
-    /*方式一：给了新属性，但值一样，不会重新render*/
-    function changeName() {
-        setAddress('XIAN');
-    }
-
-    /*方式二：给了新属性，但值变了，会重新render父组件及所有子组件*/
-    function changeName01() {
-        setAddress('BEIJING');
-    }
-
-    /*方式三：直接返回了旧的值，不重新render*/
-    function changeName02() {
-        setAddress(previous => {
-            return previous;
-        })
-    }
-
-    /*方式四：旧值更新*/
-    function changeName03() {
-        setAddress(previous => {
-            return previous + 'adf';
-        })
-    }
-
-    console.log('Father-Render')
-    return (
-        <div>
-            <h2>父亲：{address}</h2>
-
-            <button onClick={changeName03}>更换姓名</button>
-            <br/>
-            <FirstSon/>
-            <SecondSon address={address}/>
-        </div>
-    )
-}
-```
-
-```jsx
-export function FirstSon() {
-    console.log('FirstSon---Render')
-    return (
-        <div>
-            <h3>我是FirstSon</h3>
-        </div>
-    )
-}
-```
-
-```jsx
-export function SecondSon(props) {
-    console.log('SecondSon---Render')
-    return (
-        <div>
-            <h3>我是SecondSon=={props.address}</h3>
-        </div>
-    )
-}
-```
-
-### 6.2 对象属性更改
-
-```jsx
-import {useState} from "react";
-import {FirstSon} from "./FirstSon";
-import {SecondSon} from "./SecondSon";
-
-export function Father() {
-    const [data, setData] = useState({
-        name: 'erick',
-        age: 20
-    })
-
-    /*方式一：重新赋值，不管值是否相同，都会重新render*/
-    function changeInfo01() {
-        setData({
-            name: 'erick',
-            age: 20
-        })
-    }
-
-    /*方式二：返回原对象，不会render*/
-    function changeInfo02() {
-        setData((previous) => {
-            return previous;
-        })
-    }
-
-    /*方式三：返回原对象，对象值变了，不会render*/
-    function changeInfo03() {
-        setData((previous) => {
-            previous.name = 'lucy';
-            return previous;
-        })
-    }
-
-    /*方式四：返回新对象，哪怕新对象值和之前不变，也会render*/
-    function changeInfo04() {
-        setData((previous) => {
-            let newVal = {
-                name: previous.name,
-                age: previous.age
-            }
-            return newVal;
-        })
-    }
-
-    console.log('Father-Render')
-    return (
-        <div>
-            <h2>父亲：{data.name}{data.age}</h2>
-
-            <button onClick={changeInfo04}>更换信息</button>
-            <br/>
-            <FirstSon/>
-            <SecondSon address={data.address} age={data.age}/>
-        </div>
-    )
-}
-```
-
 # Context
 
 - 多层父子组件之间通信的一种方式
@@ -2670,59 +2626,6 @@ export default class Citi extends Component {
     }
 }
 ```
-
-# 生命周期
-
-- React组件，从创建到死亡会经历一些特定的阶段
-- 包含一系列钩子函数(生命周期回调函数)，会在特定的时刻调用
-
-## React-16
-
-- React中，组件第一次渲染，和后续更新状态后的渲染，都会触发React组件默认的一些回调函数
-- 所有的回调函数在React.Component中会有默认实现
-- 自定义组件在继承React.Component后，可以对其回调函数进行重写
-
-```bash
-# 第一次挂载
-
- # 1.constructor
- - 执行构造器里面的方法
- # 2. componentWillMount
- - 挂载前的准备工作
- # 3. render
- - 将内容挂载到页面上
- # 4. componentDidMount
- - 内容挂载完毕后
-```
-
-```bash
-# setState更新
-  # 1. shouldComponentUpdate
-    - 默认返回true，可以自定义实现
-    - 调用setState更新state后，是否需要重新render
-  # 2. componentWillUpdate
-  - 重新render
-  # 3. render
-  # 4. componentDidUpdate
-  - update完成后执行
-```
-
-```bash
-# forceUpdate
-  # 1. 可以在state不改变的情况下，强制刷新
-  # 2. render
-  # 3. componentDidUpdate
-
-```
-
-```bash
-  # 卸载
-  # 1. componentWillUnmount
-  - 卸载组件前，执行的动作
-  # 2. 卸载组件
-```
-
-![image-20240602102203012](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20240602102203012.png)
 
 # 项目运行
 
