@@ -854,6 +854,161 @@ export default function Son() {
 }
 ```
 
+### 3. 父子组件
+
+- 可以通过逐层嵌套的方式，父子组件的关系不太好判断
+
+#### 标签嵌套
+
+- 一种父子组件的嵌套方式
+
+```jsx
+import Father from "./Father";
+import {Son} from "./Son";
+
+export default function Customer() {
+    return (
+        <div>
+            <h1>我是customer</h1>
+            {/*通过标签体的方式
+             1. 可以更加清晰的查看父子组件的嵌套关系
+             2. 在Father中必须显示调用 props.children才能渲染son
+             3. Father的标签体：<Son>*/}
+            <Father>
+                <Son>Hi, Son</Son>
+            </Father>
+        </div>
+    );
+}
+```
+
+```jsx
+import React from "react";
+
+interface FatherProps {
+    children?: React.ReactNode;
+}
+
+export default function Father(props: FatherProps) {
+    return (
+        <div>
+            <h1>父亲组件</h1>
+
+            {/*1. 显示调用
+               2. 指定子组件的渲染的位置,并渲染子组件
+               3. 并不会解析Son的标签体内容：'Hi, Son'，交给Son去解析*/}
+            {props.children}
+        </div>
+    );
+}
+```
+
+```jsx
+import React from "react";
+
+interface SonProps {
+    children?: React.ReactNode;
+}
+
+export function Son(props: SonProps) {
+    return (
+        <div>
+            <h1>儿子组件</h1>
+            {props.children}
+        </div>
+    );
+}
+```
+
+#### renderProps
+
+- 通过标签嵌套方式，形成的父子组件，并且可以传递状态
+
+```jsx
+import React from "react";
+import {Father} from "./Father";
+import {Son} from "./Son";
+
+export default function Mall() {
+
+    /*顶层组件的属性*/
+    const [mall, setMall] = React.useState<string>('mall');
+
+    /*顶层组件的方法*/
+    const logTop = () => {
+        console.log('我是top的函数')
+    }
+
+    return (
+        <div>
+            <h1>我是customer</h1>
+
+            {/*显示组件嵌套关系*/}
+            {/*1. mall：顶层组件的属性，  logTop: 顶层组件的方法
+               2. 可以跨越父组件，直接传递给子组件*/}
+            <Father
+                /* 1.erickRender: 给Father提供一个回调方法
+                   2. 将Father的属性或者方法传递给Son*/
+                erickRender={(name, address, age) => {
+                    return <Son name={name} address={address} age={age} mall={mall} logTop={logTop}/>
+                }}/>
+        </div>
+    );
+}
+```
+
+```tsx
+import React from "react";
+
+interface FatherProps {
+    erickRender: (name: string, address: string, age: string) => React.ReactNode;
+}
+
+export function Father(props: FatherProps) {
+    const [data, setData] = React.useState({
+        name: 'shuzhan',
+        address: 'xian',
+        age: '20'
+    });
+
+    const {name, address, age} = data
+
+    return (
+        <div>
+            <h1>父亲组件开始</h1>
+
+            {/*子组件
+            1. 预留位置
+            2. 显示调用props.children进行解析子组件*/}
+            {props.erickRender(name, address, age)}
+
+            <h1>父亲组件结束</h1>
+        </div>
+    );
+}
+```
+
+```tsx
+type SonProps = {
+    name: string;
+    address: string;
+    age: string;
+    mall: string;
+    logTop: () => void;
+}
+
+export function Son(props: SonProps) {
+    return (
+        <div>
+            <h1>儿子组件开始</h1>
+            {props.name} {props.age} {props.address} {props.mall}
+            <button onClick={props.logTop}>点击</button>
+            <h1>儿子组件结束</h1>
+        </div>
+    );
+}
+```
+
 ## useRef
 
 - 维护组件的属性，状态，如果这种属性不直接被页面渲染所需要，则可以考虑使用ref，比如页面的查询条件
@@ -1918,162 +2073,6 @@ export function Son(props: SonProps) {
             <h1>儿子组件</h1>
             {/*要获取Father给Son组件传递的标签体内容: Hi,Son*/}
             {props.children}
-        </div>
-    );
-}
-```
-
-## 5. 父子组件
-
-- 可以通过逐层嵌套的方式，父子组件的关系不太好判断
-- 下面提供另外一种组件嵌套的方式，并进行父子组件之间的通信
-
-### 5.1 标签嵌套
-
-- 另外一种父子组件的嵌套方式
-
-```jsx
-import Father from "./Father";
-import {Son} from "./Son";
-
-export default function Customer() {
-    return (
-        <div>
-            <h1>我是customer</h1>
-            {/*通过标签体的方式
-             1. 可以更加清晰的查看父子组件的嵌套关系
-             2. 在Father中必须显示调用 props.children才能渲染son
-             3. Father的标签体：<Son>*/}
-            <Father>
-                <Son>Hi, Son</Son>
-            </Father>
-        </div>
-    );
-}
-```
-
-```jsx
-import React from "react";
-
-interface FatherProps {
-    children?: React.ReactNode;
-}
-
-export default function Father(props: FatherProps) {
-    return (
-        <div>
-            <h1>父亲组件</h1>
-
-            {/*1. 显示调用
-               2. 指定子组件的渲染的位置,并渲染子组件
-               3. 并不会解析Son的标签体内容：'Hi, Son'，交给Son去解析*/}
-            {props.children}
-        </div>
-    );
-}
-```
-
-```jsx
-import React from "react";
-
-interface SonProps {
-    children?: React.ReactNode;
-}
-
-export function Son(props: SonProps) {
-    return (
-        <div>
-            <h1>儿子组件</h1>
-            {props.children}
-        </div>
-    );
-}
-```
-
-### 5.2 renderProps
-
-- 通过标签嵌套方式，形成的父子组件，并且可以传递状态
-
-```jsx
-import React from "react";
-import {Father} from "./Father";
-import {Son} from "./Son";
-
-export default function Mall() {
-
-    /*顶层组件的属性*/
-    const [mall, setMall] = React.useState<string>('mall');
-
-    /*顶层组件的方法*/
-    const logTop = () => {
-        console.log('我是top的函数')
-    }
-
-    return (
-        <div>
-            <h1>我是customer</h1>
-
-            {/*显示组件嵌套关系*/}
-            {/*1. mall：顶层组件的属性，  logTop: 顶层组件的方法
-               2. 可以跨越父组件，直接传递给子组件*/}
-            <Father
-                /* 1.erickRender: 给Father提供一个回调方法
-                   2. 将Father的属性或者方法传递给Son*/
-                erickRender={(name, address, age) => {
-                    return <Son name={name} address={address} age={age} mall={mall} logTop={logTop}/>
-                }}/>
-        </div>
-    );
-}
-```
-
-```tsx
-import React from "react";
-
-interface FatherProps {
-    erickRender: (name: string, address: string, age: string) => React.ReactNode;
-}
-
-export function Father(props: FatherProps) {
-    const [data, setData] = React.useState({
-        name: 'shuzhan',
-        address: 'xian',
-        age: '20'
-    });
-
-    const {name, address, age} = data
-
-    return (
-        <div>
-            <h1>父亲组件开始</h1>
-
-            {/*子组件
-            1. 预留位置
-            2. 显示调用props.children进行解析子组件*/}
-            {props.erickRender(name, address, age)}
-
-            <h1>父亲组件结束</h1>
-        </div>
-    );
-}
-```
-
-```tsx
-type SonProps = {
-    name: string;
-    address: string;
-    age: string;
-    mall: string;
-    logTop: () => void;
-}
-
-export function Son(props: SonProps) {
-    return (
-        <div>
-            <h1>儿子组件开始</h1>
-            {props.name} {props.age} {props.address} {props.mall}
-            <button onClick={props.logTop}>点击</button>
-            <h1>儿子组件结束</h1>
         </div>
     );
 }
