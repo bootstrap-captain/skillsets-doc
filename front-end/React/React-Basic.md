@@ -360,7 +360,7 @@ export const Father = () => {
 }
 ```
 
-## State
+## useState
 
 - 当前组件的一些状态，属性，
 - 属性如果需要在页面显示，那么使用state。否则就考虑使用ref，避免页面的重复渲染问题
@@ -481,6 +481,176 @@ export default function Food() {
 ```
 
 ## useEffect
+
+- 在组件的生命周期内，进行一些操作，整个过程，没有发生任何的用户操作事件
+
+```bash
+# 场景
+- 发送ajax请求
+- 手动更改真实DOM
+- 设置订阅，启动定时器
+
+# 可以把useEffect Hook看成如下三个函数的组合
+- componentDidMount:  组件加载完毕后
+- componentDidUpdate: 组件更新后
+- componentWillMount: 组件卸载前
+```
+
+### 1. 空监听state
+
+- 依赖项数据为空数组：不监测任何属性，只会在组件整个渲染完毕后，执行一次
+
+#### 不修改state
+
+- 在副作用钩子中，不修改state属性：只会在组件第一次渲染完毕后，调用该钩子
+- 组件因为其他方式更新后，不会再次触发该钩子函数
+
+```tsx
+import {useEffect, useState} from "react";
+
+export default function App() {
+    console.log('render');
+
+    const [data, setData] = useState<string>('');
+
+    /*1. 检测空数组
+    * 2. 在hook中不修改state属性*/
+    useEffect(() => {
+        console.log("副作用hook");
+    }, [])
+    return (
+        <>
+            <div>{data}</div>
+            <button onClick={() => {
+                setData(previous => previous + '~')
+            }}>修改数据
+            </button>
+        </>
+    )
+}
+```
+
+#### 修改state
+
+```bash
+1. 页面初次渲染，                                                      render --- 1
+2. 渲染完毕后，调用useEffect钩子，                                       副作用hook
+3. useEffect钩子改变了state，触发页面更新                                render --- 2
+4. 后续任何state更新， useEffect不再调用
+```
+
+```tsx
+import {useEffect, useState} from "react";
+
+export default function App() {
+
+    const [data, setData] = useState<number>(1);
+
+    console.log('render', data);
+
+    /*1. 检测空数组
+    * 2. 在hook中修改state属性*/
+    useEffect(() => {
+        setData((previous) => {
+            return previous + 1;
+        });
+        console.log("副作用hook");
+    }, [])
+    return (
+        <>
+            <div>{data}</div>
+            <button onClick={() => {
+                setData(previous => previous + 1)
+            }}>修改数据
+            </button>
+        </>
+    )
+}
+```
+
+### 2. 指定监听state
+
+- 页面初始化渲染完毕后调用一次钩子，state改变时继续调用钩子
+
+```tsx
+import {useEffect, useState} from "react";
+
+export default function App() {
+
+    const [data, setData] = useState<number>(1);
+
+    console.log('render', data);
+
+    /*1. 检测state属性-data
+    * 2. 在hook中修改state属性*/
+    useEffect(() => {
+        console.log("副作用hook");
+    }, [data]);
+    return (
+        <>
+            <div>{data}</div>
+            <button onClick={() => {
+                setData(previous => previous + 1)
+            }}>修改数据
+            </button>
+        </>
+    )
+}
+```
+
+### 3. 监听所有state
+
+- 如果不指定监听的state，则默认会监听当前组件的所有state
+
+```tsx
+import {useEffect, useState} from "react";
+
+export default function App() {
+
+    const [data, setData] = useState<number>(1);
+
+    console.log('render', data);
+
+    /*1. 不指定监听的state*/
+    useEffect(() => {
+        console.log("副作用hook");
+    });
+    return (
+        <>
+            <div>{data}</div>
+            <button onClick={() => {
+                setData(previous => previous + 1)
+            }}>修改数据
+            </button>
+        </>
+    )
+}
+```
+
+### 4. 死循环
+
+- 不要在副作用中，监听某个state，同时改变某个state，否则就会触发页面的无限渲染
+
+```tsx
+import {useEffect, useState} from "react";
+
+export default function App() {
+
+    const [data, setData] = useState<number>(1);
+
+    console.log('render', data);
+
+    /*1. 不指定监听的state*/
+    useEffect(() => {
+        setData((prev) => prev + 1);
+    }, [data]);
+    return (
+        <>
+            <div>{data}</div>
+        </>
+    )
+}
+```
 
 
 
@@ -683,7 +853,7 @@ export default function Son() {
 }
 ```
 
-## Ref
+## useRef
 
 - 维护组件的属性，状态，如果这种属性不直接被页面渲染所需要，则可以考虑使用ref，比如页面的查询条件
 
@@ -2044,205 +2214,6 @@ export function Father() {
     )
 }
 ```
-
-## 7. useEffect
-
-- React Hook函数，从而在函数式组件中，能够使用组件的生命周期
-- 整个过程，没有发生任何的用户事件
-- 监测的对象：依赖项数据
-
-```bash
-# 副作用钩子
-- 发送ajax请求
-- 手动更改真实DOM
-- 设置订阅，启动定时器
-
-# 可以把useEffect Hook看成如下三个函数的组合
-- componentDidMount:  组件加载完毕后
-- componentDidUpdate: 组件更新后
-- componentWillMount: 组件卸载前
-```
-
-### 7.1 空依赖项
-
-- 依赖项数据为空数组
-- 不监测任何属性，只会在组件整个渲染完毕后，执行一次
-
-#### 不修改state
-
-- 在副作用钩子中，不修改state属性，那么就只会在组件第一次渲染完毕后，调用该钩子
-- 更新组件，不会再次触发该钩子函数
-
-```tsx
-import React from "react";
-
-export default function Mall() {
-
-    const [data, setData] = React.useState(1);
-
-    const handleAddClick = () => {
-        setData((previous) => {
-            return previous + 1;
-        })
-    }
-
-    console.log('coming')
-
-    /*不监测任何数据，只在第一次组件加载完毕后调用该方法*/
-    React.useEffect(() => {
-        // 执行异步操作，不修改state属性
-        console.log('副作用执行了')
-    }, []);/*没有依赖项*/
-
-    return (
-        <div>
-            <button onClick={handleAddClick}>点击加</button>
-        </div>
-    )
-}
-```
-
-#### 修改state
-
-```tsx
-import React from "react";
-
-/* 1. coming 1
-*  2. 页面渲染完毕，调用副作用，修改为2
-*  3. data变了，再次调用mall函数： coming, 2
-*  4. 渲染return*/
-export default function Mall() {
-
-    const [data, setData] = React.useState(1);
-
-    console.log('coming', data)
-
-    React.useEffect(() => {
-        // 执行异步操作，修改state属性
-        console.log('副作用执行了')
-        setData((previous) => {
-            return previous + 1;
-        })
-    }, []);/*监测所有state*/
-
-    return (
-        <div>
-            {data}
-        </div>
-    )
-}
-```
-
-### 7.2 特定依赖项
-
-#### 不修改state
-
-- 在副作用钩子中，不修改state属性
-- 监测指定state，页面初始化渲染完毕后调用一次钩子，state改变时继续调用钩子
-
-```tsx
-import React from "react";
-
-export default function Mall() {
-
-    const [data, setData] = React.useState(1);
-
-    const handleAddClick = () => {
-        setData((previous) => {
-            return previous + 1;
-        })
-    }
-
-    console.log('coming')
-
-    React.useEffect(() => {
-        // 执行异步操作，不修改state属性
-        console.log('副作用执行了')
-    }, [data]);/*监测指定state*/
-
-    return (
-        <div>
-            <button onClick={handleAddClick}>点击加</button>
-        </div>
-    )
-}
-```
-
-### 7.3 不指定依赖项
-
-- 如果不指定依赖项，则默认会监听当前组件的所有state
-
-#### 不修改state
-
-```tsx
-import React from "react";
-
-export default function Mall() {
-
-    const [data, setData] = React.useState(1);
-    const [count, setCount] = React.useState(1);
-
-    const handleDataClick = () => {
-        setData((previous) => {
-            return previous + 1;
-        })
-    }
-
-    const handleCountClick = () => {
-        setCount((previous) => {
-            return previous + 1;
-        })
-    }
-
-    console.log('coming')
-
-    React.useEffect(() => {
-        // 执行异步操作，不修改state属性
-        console.log('副作用执行了')
-    });/*监测所有state*/
-
-    return (
-        <div>
-            <button onClick={handleDataClick}>点击加Data</button>
-            <button onClick={handleCountClick}>点击加Count</button>
-        </div>
-    )
-}
-```
-
-### 7.4 死循环
-
-- 不要在副作用中修改依赖，这样就会造成死循环
-
-```tsx
-import React from "react";
-
-export default function Mall() {
-
-     // 1
-    const [data, setData] = React.useState(1);
-
-    console.log('coming', data)
-
-   // 3
-    React.useEffect(() => {
-        // 死循环：在副作用中修改了依赖
-        console.log('副作用执行了')
-        setData((previous) => {
-            return previous + 1;
-        })
-    }, [data]);
-
-    //2
-    return (
-        <div>
-            {data}
-        </div>
-    )
-}
-```
-
-
 
 # Context
 
