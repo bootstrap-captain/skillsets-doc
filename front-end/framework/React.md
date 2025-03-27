@@ -1536,152 +1536,119 @@ export default function App() {
 }
 ```
 
+# 路由
 
 
 
+# 状态管理
 
-
-
-# Context
+## Context
 
 - 多层父子组件之间通信的一种方式
 - 开发中一般不用context，一般都用它来封装react插件
 - Props传递：传递数据可以使用props，但是层级多了后，必须一层层传递props，比较麻烦
 - 而且props传递时，层级多时，如果从顶层组件到底层组件，中间组件并不想获取到这个数据
 
-## 2.1 公共缓存
+### 1. 定义
 
-```js
-import React from "react";
-/*定义一个Context，所有组件都可以访问到*/
-export const ErickContext = React.createContext();
+```ts
+import {createContext} from "react";
+
+export interface FoodContextConfig {
+    name: string;
+    version: string;
+    appId: string;
+    work: () => void;
+}
+
+/*定义context*/
+export const FoodContext = createContext<FoodContextConfig>({} as FoodContextConfig);
 ```
 
-## 2.2 顶组件
+### 2. 顶层组件
 
-- 包裹了Second组件，则Second组件及Second组件的子组件系列，都可以访问到顶组件的数据
+- 包裹了Father组件，则Father组件及Father组件的子组件系列，都可以访问到顶组件的数据
 
-```jsx
-import {Component} from "react";
-import {Second} from "./Second";
-import {ErickContext} from "./ErickContext";
+```tsx
+import {FoodContext} from "./component/context/FoodContext.ts";
+import Father from "./component/cat/Father.tsx";
 
-export class First extends Component {
+export default function App() {
 
-    state = {
-        name: 'first',
-        address: 'xian',
-    }
-
-    render() {
-        return (
-            <>
-                <div>我是First组件{this.state.name}{this.state.address}</div>
-                {/*必须是value*/}
-                <ErickContext.Provider value={
-                    {
-                        name: this.state.name,
-                        address: this.state.address
-                    }
-                }>
-                    <Second/>
-                </ErickContext.Provider>
-
-            </>
-        )
-    }
+    return (
+        <div>
+            <FoodContext.Provider value={{
+                name: '顶部',
+                version: '1.0.0',
+                appId: 'random',
+                work: () => {
+                    console.log("hello")
+                }
+            }}>
+                {/*子组件*/}
+                <Father/>
+            </FoodContext.Provider>
+        </div>
+    )
 }
 ```
 
-## 2.3 中间组件
+### 3. 中间组件
 
-- 需要就声明，否则不用
+```tsx
+import FirstSon from "./FirstSon.tsx";
+import SecondSon from "./SecondSon.tsx";
 
-```jsx
-import {Component} from "react";
-import {Third} from "./Third";
+export default function Father() {
 
-export class Second extends Component {
-    render() {
-        return (
-            <>
-                <div>我是Second组件</div>
-                <Third/>
-            </>
-        )
-    }
-}
-```
-
-## 2.4 底层组件
-
-### 类式组件
-
-```jsx
-import {Component} from "react";
-import {ErickContext} from "./ErickContext";
-
-export class Third extends Component {
-
-    /*static属性，举手：要从顶层中去取数据*/
-    static contextType = ErickContext;
-
-    render() {
-        return (
-            <>
-                <div>
-                    <div>我是Third组件{this.context.name}{this.context.address}</div>
-                </div>
-            </>
-        )
-    }
-}
-```
-
-### 类式/函数都可
-
-```jsx
-import {Component} from "react";
-import {ErickContext} from "./ErickContext";
-
-export class Third extends Component {
-
-    render() {
-        return (
-            <>
-                <ErickContext.Consumer>
-                    {
-                        (value) => {
-                            const {name, address} = value;
-                            return <div>我是Third组件{name}{address}</div>
-                        }
-                    }
-                </ErickContext.Consumer>
-            </>
-        )
-    }
-}
-```
-
-```jsx
-import {ErickContext} from "./ErickContext";
-
-export function Third() {
+    /*当前组件用不到对应的属性，就什么也不做*/
     return (
         <>
-            <ErickContext.Consumer>
-                {
-                    (value) => {
-                        const {name, address} = value;
-                        return <div>我是Third组件{name}{address}</div>
-                    }
-                }
-            </ErickContext.Consumer>
+            <FirstSon/>
+            <SecondSon/>
         </>
     )
-
 }
 ```
+
+### 4. 消费组件
+
+- 消费组件可以通过顶层组件提供的方法，来对其中的内容进行修改
+
+```tsx
+import {useContext} from "react";
+import {FoodContext, FoodContextConfig} from "../context/FoodContext.ts";
+
+export default function FirstSon() {
+    /*直接使用*/
+    const {appId} = useContext<FoodContextConfig>(FoodContext);
+
+    return (
+        <div>first son{appId}</div>
+    )
+}
+```
+
+```tsx
+import {FoodContext} from "../context/FoodContext";
+
+export default function SecondSon() {
+    console.log('SecondSon Render');
+    return (
+        <div>
+            {/*复杂逻辑用这种*/}
+            <FoodContext.Consumer>
+                {context => (<div>{context.name}</div>)}
+            </ FoodContext.Consumer>
+
+        </div>
+    );
+}
+```
+
+
+
+
 
 # 项目运行
 
