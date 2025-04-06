@@ -770,6 +770,8 @@ public class NikeUserDetailService implements UserDetailsService {
 
 ## 授权Auth
 
+![image-20250330184759428](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250330184759428.png)
+
 - 经过上面的认证后，后面请求中就会携带当前ACCESS_TOKEN作为header
 
 ```java
@@ -841,11 +843,11 @@ public class SecurityConfig {
 
         /*添加该配置过滤器*/
         http.addFilterAt(new ErickLoginFilter(authenticationManager), UsernamePasswordAuthenticationFilter.class);
-      
-        // JWT的前置处理器
+        // 任何请求都会进来，不受上面规则的限制
         http.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 }
+
 ```
 

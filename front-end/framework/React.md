@@ -4,7 +4,7 @@
 
 ```bash
 npm create vite@latest
-# 依次输入  项目名， React, TypeScript
+# 依次输入  项目名， React, TypeScript+SWC
 ```
 
 ![image-20250317112745263](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250317112745263.png)
@@ -31,7 +31,7 @@ npm create vite@latest
 </html>
 ```
 
-### main.tsc
+### main.tsx
 
 - 入口文件，将APP组件渲染到页面
 
@@ -49,7 +49,7 @@ createRoot(document.getElementById('root')!).render(
 )
 ```
 
-### App.tsc
+### App.tsx
 
 - 导出APP组件
 - 一般不会在这里直接写组件，而是利用app.tsc来统一导入其他的组件
@@ -70,7 +70,7 @@ export default App
 
 ```bash
 # 具体的模块，建在src/components/xxx中
-- tsx：React的模块组件代码        rfc快速生成函数式组件            rf
+- tsx：React的模块组件代码        rfc快速生成函数式组件          
 - ts：ts功能代码 
 - css：样式代码
 
@@ -225,7 +225,7 @@ export default Cat;
 
 ## 5. Fragment
 
-- tsx中，函数式组件和类式组件，返回值都必须用一个闭合标签来包裹，因此多了很多不需要的div
+- tsx中，组件返回值都必须用一个闭合标签来包裹，因此多了很多不需要的div
 
 ### 闭合标签
 
@@ -262,7 +262,7 @@ export default Cat;
 ### Fragment
 
 - 如果不想嵌套不必要的div，则可以使用React提供的Fragment
-- React在解析时候，会自动把Fragment去掉
+- React在解析时，会自动把Fragment去掉
 - 相比空标签，Fragment可以指定key，只能指定key，可以参与唯一标识的遍历
 
 ```tsx
@@ -280,11 +280,7 @@ const Cat = () => {
 export default Cat;
 ```
 
-
-
-
-
-## 5. 虚拟DOM
+## 6. 虚拟DOM
 
 - 本质是Object类型的对象(一般对象)
 - 虚拟DOM轻，真实DOM比较重。虚拟DOM是React内部使用，不需真实DOM那么多的属性
@@ -310,7 +306,7 @@ const realDom = document.getElementById('root');
 console.log('Real Dom', realDom);
 ```
 
-## 6. React开发工具
+## 7. React开发工具
 
 - 在谷歌浏览器中加入，后面可以在Component中，查看每个组件的具体的属性，组件树之间的关系
 
@@ -323,7 +319,6 @@ console.log('Real Dom', realDom);
 - 模块化：js的模块化，对js的拆分
 - 组件：对js，html，css，image，video，font等的进行拆分
 - 一个大的应用，所有的js，html等代码，都会划分为多个组件，多个组件拼接起来，就是一个完整的页面
-- React18后，新特性可以使用组件的一些特性，官方比较推荐，代码复用率高
 
 ## 基本写法
 
@@ -331,7 +326,7 @@ console.log('Real Dom', realDom);
 
 ```jsx
 /*  渲染组件到页面
-   * 1. React解析组件标签，找到了Cat组件
+   * 1. React解析组件标签，找到了Father组件
    * 2. 发现是组件是使用函数定义的，调用该函数
    * 3. 将返回的该组件的虚拟DOM转换为真实DOM,随后呈现在页面*/
 export default function Father() {
@@ -339,7 +334,6 @@ export default function Father() {
     * 2. 首字母不要用小写，否则会当作html标签渲染
          首字母大写，就会当作组件来渲染*/
     return (
-        /*li中必须指定key，从而让DOM在比较时可以使用，可以用index*/
         <div>
             Hi, 我是函数式组件
         </div>
@@ -1536,9 +1530,349 @@ export default function App() {
 }
 ```
 
-# 路由
+# React-Router
 
+```bash
+# SPA: Single Page Application: 单页面Web应用
+- 整个页面只有一个完整的页面
+- 点击页面中的链接，不会刷新页面，只会做页面的局部更新
+- 数据都需要通过Ajax请求获取，并在前端异步呈现
+- 单页面，多组件，通过点击，路由跳转到指定组件
+```
 
+## 基本介绍
+
+- react的一个插件库，专门用来实现一个SPA应用，基于React的项目基本都会用到该插件
+- [官网](https://reactrouter.com/home)
+
+```bash
+# react-router-dom
+- 为web打造
+
+# react-router-native
+- 为react原生应用开发的
+
+# react-router-any
+- 全部都能用，通用型强，api能复杂点
+```
+
+```bash
+npm i react-router-dom@7.5.0
+```
+
+## 路由规则
+
+- 只能在url中进行跳转，没有页面上的link可以点
+- 匹配成功后，不再向下遍历匹配
+
+### serviceRouter.tsx
+
+- element：都是路由组件，懒加载，只有点击触发了某个路由，才会去调用对应的函数式路由组件
+
+```tsx
+import {createBrowserRouter, createRoutesFromElements, Route} from "react-router-dom";
+import Welcome from "../pages/welcome/Welcome.tsx";
+import ErickError from "../pages/error/ErickError.tsx";
+import Home from "../pages/home/Home.tsx";
+import Good from "../pages/good/Good.tsx";
+import Cart from "../pages/cart/Cart.tsx";
+import Admin from "../pages/admin/Admin.tsx";
+import Customer from "../pages/admin/customer/Customer.tsx";
+import Guest from "../pages/admin/guest/Guest.tsx";
+
+export const router = createBrowserRouter(createRoutesFromElements(
+    /*顶层路由: 需要在Welcome中设置Outlet
+      element: 配置的组件都是懒加载的*/
+    <Route path={'/'} element={<Welcome/>} errorElement={<ErickError/>}>
+        {/*二级路由*/}
+        <Route path={'home'} element={<Home/>}/>
+        <Route path={'good'} element={<Good/>}/>
+        <Route path={'cart'} element={<Cart/>}/>
+        {/*三级路由: 需要在Admin中设置Outlet*/}
+        <Route path={'admin'} element={<Admin/>}>
+            <Route path={'customer'} element={<Customer/>}/>
+            <Route path={'guest'} element={<Guest/>}/>
+        </Route>
+    </Route>
+));
+```
+
+### App.tsx
+
+```tsx
+import {RouterProvider} from "react-router-dom";
+import {router} from "./routes/serviceRouter.tsx";
+
+export default function App() {
+    return (
+        <RouterProvider router={router}></RouterProvider>
+    )
+}
+```
+
+### Welcome.tsx
+
+```tsx
+import {Outlet} from "react-router-dom";
+
+export default function Welcome() {
+    return (
+        <>
+            <div>我是欢迎页面</div>
+            {/*声明下一级别的路由的渲染的地方*/}
+            <Outlet/>
+        </>
+    );
+}
+```
+
+![image-20250406142512635](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20250406142512635.png)
+
+## 页面点击
+
+- 路由页面中，定义一些页面元素链接
+- 可以定义在父路由页面中，可以识别到当前的路由，子路由，父路由
+- 点击后，浏览器url进行跳转，从而触发之前定义的路由规则，装填不同的组件
+
+### Welcome.tsx
+
+```tsx
+import {createBrowserRouter, createRoutesFromElements, Route} from "react-router-dom";
+import Welcome from "../pages/welcome/Welcome.tsx";
+import ErickError from "../pages/error/ErickError.tsx";
+import Home from "../pages/home/Home.tsx";
+import Good from "../pages/good/Good.tsx";
+import Cart from "../pages/cart/Cart.tsx";
+import Admin from "../pages/admin/Admin.tsx";
+import Customer from "../pages/admin/customer/Customer.tsx";
+import Guest from "../pages/admin/guest/Guest.tsx";
+
+export const router = createBrowserRouter(createRoutesFromElements(
+    /*顶层路由: 需要在Welcome中设置Outlet*/
+    <Route path={'/'} element={<Welcome/>} errorElement={<ErickError/>}>
+        {/*二级路由*/}
+        <Route path={'home'} element={<Home/>}/>
+        <Route path={'good'} element={<Good/>}/>
+        <Route path={'cart'} element={<Cart/>}/>
+        {/*三级路由: 需要在Admin中设置Outlet*/}
+        <Route path={'admin'} element={<Admin/>}>
+            <Route path={'customer'} element={<Customer/>}/>
+            <Route path={'guest'} element={<Guest/>}/>
+        </Route>
+    </Route>
+));
+```
+
+### Admin.tsx
+
+```tsx
+import {NavLink, Outlet} from "react-router-dom";
+
+export default function Admin() {
+    return (
+        <>
+            <div>用户管理</div>
+            {/*全路径*/}
+            <NavLink to={'/admin/customer'}>普通用户</NavLink><br/>
+            {/*子路由名字*/}
+            <NavLink to={'guest'}>游客模式</NavLink><br/>
+            <Outlet/>
+        </>
+    );
+}
+```
+
+## 编程式路由
+
+- 当触发某个函数的时候，在ts的代码中，让浏览器中的url发生变化，从而再根据路由规则显示某些组件
+
+```tsx
+import {NavigateFunction, useNavigate} from "react-router-dom";
+
+export default function Guest() {
+
+    /*钩子函数*/
+    const navigate: NavigateFunction = useNavigate();
+
+    const handleGoToCart = () => {
+        /*全路径*/
+        navigate('/cart', {
+            replace: false,
+            state: {}
+        });
+    }
+
+    return (
+        <>
+            <div>游客模式</div>
+            <button onClick={handleGoToCart}>回到Cart</button>
+        </>
+
+    );
+}
+```
+
+## 跳转模式
+
+### push
+
+- 默认方式
+
+```bash
+# 默认push，使用压栈操作，在浏览器页面
+- 回退或者前进，可以进行
+
+http://localhost:3000/home             # 3
+http://localhost:3000/about/detail     # 2     # 当前元素
+http://localhost:3000/about            # 1
+```
+
+### replace
+
+```bash
+# 在Navlink中开启 
+ <NavLink replace={true}
+ 
+# 替换操作， 如果下一个是替换模式，则会替换掉栈顶元素
+http://localhost:3000/about/detail     # 2     
+http://localhost:3000/about            # 1
+```
+
+## 传参
+
+- 从一个路由跳转到其他路由时，可以携带数据传递到目标路由
+- params参数，search参数，state参数
+
+### 路由规则
+
+- 在浏览器中直接输入对应的链接，即可
+- 必须匹配好，不然后面的页面中的点击就会不生效
+
+```tsx
+import {createBrowserRouter, createRoutesFromElements, Route} from "react-router-dom";
+import Welcome from "../pages/welcome/Welcome.tsx";
+import ErickError from "../pages/error/ErickError.tsx";
+import Home from "../pages/home/Home.tsx";
+import Good from "../pages/good/Good.tsx";
+import Cart from "../pages/cart/Cart.tsx";
+
+export const router = createBrowserRouter(createRoutesFromElements(
+    <Route path={'/'} element={<Welcome/>} errorElement={<ErickError/>}>
+
+        {/*1. 既可以传参数，也可以不传参
+           2. 如果没有外层的包裹，则只能使用带参数的url访问
+           */}
+
+        {/*1. params传递参数：
+        页面链接： http://localhost:5173/home/123/erick_params*/}
+        <Route path={'home'} element={<Home/>}>
+            <Route path={':id/:type'} element={<Home/>}/>
+        </Route>
+
+        {/*2. search传递参数
+        页面链接: http://localhost:5173/good?id=999&type=erick_search*/}
+        <Route path={'good'} element={<Good/>}>
+            <Route path={'good'} element={<Good/>}></Route>
+        </Route>
+
+        {/*3. state传参数： 不能通过页面链接的方式
+        页面链接：http://localhost:5173/cart*/}
+        <Route path={'cart'} element={<Cart/>}/>
+    </Route>
+));
+```
+
+### 页面点击
+
+```tsx
+import {NavLink, Outlet} from "react-router-dom";
+
+export default function Welcome() {
+    const params = {
+        id: '123',
+        type: 'erick_params',
+    }
+
+    const search = {
+        id: '999',
+        type: 'erick_search',
+    }
+
+    const state = {
+        id: '666',
+        type: 'erick_state',
+    }
+
+    return (
+        <>
+            <div>我是欢迎页面</div>
+            {/*1. param 传参数*/}
+            <NavLink to={`/home/${params.id}/${params.type}`}>Home页面</NavLink><br/>
+
+            {/*2. search传参*/}
+            <NavLink to={`/good?id=${search.id}&type=${search.type}`}>Good页面</NavLink><br/>
+
+            {/*3. state传参数*/}
+            <NavLink to={'/cart'} state={{
+                id: state.id,
+                type: state.type,
+            }}>Cart页面</NavLink><br/>
+            <Outlet/>
+        </>
+    );
+}
+```
+
+### 数据接收
+
+- 目标路由页面，接收传递的参数
+
+```tsx
+import {useParams} from "react-router-dom";
+
+export default function Home() {
+    /*useParams钩子函数*/
+    const params = useParams();
+    const {id, type} = params;
+    return (
+        <div>我是家{id} ===== {type}</div>
+    );
+}
+```
+
+```tsx
+import {useLocation, useSearchParams} from "react-router-dom";
+
+export default function Good() {
+    /*方式一：searchParams*/
+    const searchParams = useSearchParams();
+    const [search] = searchParams;
+
+    /*方式二：从location中获取：
+    结果：   ?id=999&type=erick_search*/
+    const location = useLocation();
+    console.log(location.search);
+
+    return (
+        <>
+            <div>{search.get('id')} ===== {search.get('type')}</div>
+        </>
+    )
+}
+```
+
+```tsx
+import {useLocation} from "react-router-dom";
+
+export default function Cart() {
+    /*钩子函数*/
+    const location = useLocation();
+
+    return (
+        <div>购物车{location.state.id} === {location.state.type}</div>
+    );
+}
+```
 
 # 状态管理
 
@@ -1549,7 +1883,7 @@ export default function App() {
 - Props传递：传递数据可以使用props，但是层级多了后，必须一层层传递props，比较麻烦
 - 而且props传递时，层级多时，如果从顶层组件到底层组件，中间组件并不想获取到这个数据
 
-### 1. 定义
+### 定义
 
 ```ts
 import {createContext} from "react";
@@ -1565,7 +1899,7 @@ export interface FoodContextConfig {
 export const FoodContext = createContext<FoodContextConfig>({} as FoodContextConfig);
 ```
 
-### 2. 顶层组件
+### 顶层组件
 
 - 包裹了Father组件，则Father组件及Father组件的子组件系列，都可以访问到顶组件的数据
 
@@ -1593,7 +1927,7 @@ export default function App() {
 }
 ```
 
-### 3. 中间组件
+### 中间组件
 
 ```tsx
 import FirstSon from "./FirstSon.tsx";
@@ -1611,7 +1945,7 @@ export default function Father() {
 }
 ```
 
-### 4. 消费组件
+### 消费组件
 
 - 消费组件可以通过顶层组件提供的方法，来对其中的内容进行修改
 
@@ -1645,10 +1979,6 @@ export default function SecondSon() {
     );
 }
 ```
-
-
-
-
 
 # 项目运行
 

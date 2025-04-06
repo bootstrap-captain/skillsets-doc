@@ -3016,8 +3016,6 @@ public class Demo01 {
 - Thread.currentContextClassLoader(), 上层的实现类如果要加载下面的类，则通过这个获取到底层的类加载器来加载
 - 第三次：由于用户对程序动态性的追求导致：代码热替换，模块热部署
 
-
-
 # Class文件
 
 ## 1. javac
