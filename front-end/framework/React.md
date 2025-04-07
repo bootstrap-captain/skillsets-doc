@@ -1302,6 +1302,253 @@ export function Father() {
 }
 ```
 
+# 渲染性能
+
+## useMemo
+
+- 缓存函数计算结果
+
+### 普通使用
+
+- 只要count或者age发生变化，页面就会重新渲染，就会每次都去调用handleCountChange函数
+- handleCountChange只和count有关，希望只有count发生变化时，才去重新调用该函数
+
+```tsx
+import {useState} from "react";
+
+export default function App() {
+    const [count, setCount] = useState<number>(0);
+    const [age, setAge] = useState<number>(10);
+
+    /*该函数的执行，只和count有关*/
+    const finalCount = handleCountChange(count);
+
+    return (
+        <div>
+            <button onClick={() => setCount(count + 1)}>count加1</button>
+            <button onClick={() => setAge(age + 1)}>age加1</button>
+            <div>{finalCount}</div>
+        </div>
+    )
+}
+
+/*一个函数结果*/
+function handleCountChange(count: number): number {
+    console.log("executing count");
+    return count * 10;
+}
+```
+
+### useMemo
+
+```tsx
+import {useMemo, useState} from "react";
+
+export default function App() {
+    const [count, setCount] = useState<number>(0);
+    const [age, setAge] = useState<number>(10);
+
+
+    /*参数一：回调函数
+    * 参数二：监控项目
+    * 1. 组件挂载完毕后，第一次执行
+    * 2. count变化时，才去调用该函数
+    * 3. age变化时候，对该函数结果执行了缓存，不会再次调用 */
+    const finalCount = useMemo(() => {
+        return handleCountChange(count);
+    }, [count]);
+
+    return (
+        <div>
+            <button onClick={() => setCount(count + 1)}>count加1</button>
+            <button onClick={() => setAge(age + 1)}>age加1</button>
+            <div>{finalCount}</div>
+        </div>
+    )
+}
+
+/*一个函数结果*/
+function handleCountChange(count: number): number {
+    console.log("executing count");
+    return count * 10;
+}
+```
+
+### 使用场景
+
+```bash
+# 缺点：不要大量使用，
+- 缓存值会占用内存，过度使用可能导致性能下降
+
+# 场景
+- 适用于计算成本高（如复杂运算、大数组处理）或需要稳定对象引用的场景
+```
+
+## memo
+
+- 父组件重新渲染时候，子组件的props没有发生变化时，不希望子组件重新渲染
+- 默认行为：父组件只要渲染，子组件就会重选渲染，不管子组件有无props属性
+
+### 无props
+
+```tsx
+import {useState} from "react";
+import {Son} from "./Son.tsx";
+
+export default function Father() {
+    const [age, setAge] = useState<number>(0);
+
+    return (
+        <div>
+            <div>我是父组件 {age}</div>
+            {/*子组件并没有用到父组件的属性，state发生变化，父组件就会重新渲染，带动子组件一起渲染*/}
+            <button onClick={() => setAge(age + 1)}>年龄加1</button>
+            <Son/>
+        </div>
+    );
+}
+```
+
+```tsx
+export function Son() {
+   // 默认就会重新render
+    console.log('Son render');
+
+    return (
+        <div>我是子组件</div>
+    );
+}
+```
+
+```tsx
+import {memo} from "react";
+
+function Son() {
+    console.log('Son render');
+
+    return (
+        <div>我是子组件</div>
+    );
+}
+
+/*父组件重新render，子组件并没有用到父组件的属性，所以不会重新render*/
+export default memo(Son);
+```
+
+### 有props
+
+- props比较时，使用的是Object.is(oldValue, newValue)
+
+#### 基本数据
+
+- 普通数据类型：比较的是值
+
+```tsx
+import {useState} from "react";
+import Son from "./Son.tsx";
+
+export default function Father() {
+    const [age, setAge] = useState<number>(0);
+
+    return (
+        <div>
+            <div>我是父组件 {age}</div>
+            {/*子组件并没有用到父组件的属性，state发生变化，父组件就会重新渲染，带动子组件一起渲染*/}
+            <button onClick={() => setAge(age + 1)}>年龄加1</button>
+            <Son age={age}/>
+        </div>
+    );
+}
+```
+
+```tsx
+import {memo} from "react";
+
+interface SonProps {
+    age: number;
+}
+
+function Son(props: SonProps) {
+    console.log('Son render');
+    console.log(props);
+    return (
+        <div>我是子组件</div>
+    );
+}
+
+/*父组件重新render，子组件并没有用到父组件的属性，所以不会重新render*/
+export default memo(Son);
+```
+
+#### 引用数据-不稳定值
+
+- 比较的是引用值
+
+```tsx
+import Son from "./Son.tsx";
+import {useState} from "react";
+
+export default function Father() {
+    const hobby: string[] = ['erick', 'lucy'];
+
+    /*父页面因为age重新render了，上面的hobby就会分配一个新数组，引用不稳定，导致子组件重新渲染*/
+    const [age, setAge] = useState<number>(0);
+
+    return (
+        <div>
+            <div>我是父组件</div>
+            <button onClick={() => setAge(age + 1)}>年龄增长</button>
+            <Son hobby={hobby}/>
+        </div>
+    );
+}
+```
+
+```tsx
+import {memo} from "react";
+
+interface SonProps {
+    hobby: string[];
+}
+
+function Son(props: SonProps) {
+    console.log('Son render');
+    console.log(props);
+    return (
+        <div>我是子组件</div>
+    );
+}
+
+/*父组件重新render，子组件并没有用到父组件的属性，所以不会重新render*/
+export default memo(Son);
+```
+
+#### 引用数据-useMemo结合
+
+- 对于上面的引用数据的引用不稳定，可以使用useMemo进行缓存
+
+```tsx
+import Son from "./Son.tsx";
+import {useMemo, useState} from "react";
+
+export default function Father() {
+    /*页面虽然因为age重新render了，但是hobby值已经被缓存了*/
+    const hobby = useMemo(() => {
+        return ['erick', 'lucy'];
+    }, []);
+    
+    const [age, setAge] = useState<number>(0);
+
+    return (
+        <div>
+            <div>我是父组件</div>
+            <button onClick={() => setAge(age + 1)}>年龄增长</button>
+            <Son hobby={hobby}/>
+        </div>
+    );
+}
+```
+
 # 受控组件
 
 ## 高阶函数
