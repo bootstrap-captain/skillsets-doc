@@ -19,3 +19,28 @@
 - 必须先切换到中文，才有PicGo.app的选项
 
 ![image-20250409160746390](https://skillset.oss-cn-shanghai.aliyuncs.com/image-20250409160746390.png)
+
+# IP
+
+```BASH
+ipconfig getifaddr en0
+```
+
+# sftp功能
+
+```bash
+ # mac的上传和下载
+ - put source target   # 上传
+ - get source target   # 下载
+```
+
+# 云服务器
+
+## 1. 服务器相同IP，本地连接
+
+```bash
+cd /Users/shuzhan/.ssh
+rm -rf known_hosts
+```
+
+![image-20250409161735225](https://skillset.oss-cn-shanghai.aliyuncs.com/image-20250409161735225.png)
