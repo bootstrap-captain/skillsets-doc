@@ -184,3 +184,21 @@ git reset --hard head~1    # 撤销commit，撤销add，工作区代码改动丢
 #  分支管理
 
 ![image-20241107144432819](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20241107144432819.png)
+
+# 版本管理
+
+```bash
+# 版本格式
+- Major.Minor.Patch            主版本.次版本.修订版本
+- 5.2.3
+
+# 主版本
+- 破坏性更新(可能不兼容就版本)
+
+# 次版本
+- 次要功能更新
+
+# 修订版本
+- 修复漏洞
+```
+

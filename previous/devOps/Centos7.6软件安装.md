@@ -174,38 +174,6 @@ bin/kafka-server-start.sh -daemon config/server.properties
 jps
 ```
 
-# Maven-3.9.9
-
-- [官网下载](https://archive.apache.org/dist/maven/maven-3/3.6.3/binaries/)
-
-- Maven依赖Java
-
-```bash
-# 上传到usr/local目录下并解压
-put /Users/shuzhan/Desktop/apache-maven-3.9.9-bin.tar.gz /usr/local
-tar -zxvf apache-maven-3.9.9-bin.tar.gz
-
-# 查看版本， 出现下面代表安装成功
-/usr/local/apache-maven-3.9.9/bin/mvn -v
-
-
-Maven home: /usr/local/apache-maven-3.9.9
-Java version: 17.0.4.1, vendor: Oracle Corporation, runtime: /usr/local/java17/jdk-17.0.4.1
-Default locale: en_US, platform encoding: ANSI_X3.4-1968
-OS name: "linux", version: "3.10.0-957.21.3.el7.x86_64", arch: "amd64", family: "unix"
-```
-
--  修改maven的对应的setting.xml
-
-```xml
-<mirror>
-      <id>alimaven</id>
-      <name>aliyun maven</name>
-      <url>http://maven.aliyun.com/nexus/content/groups/public/</url>
-    <mirrorOf>central</mirrorOf>
- </mirror>
-```
-
 # Nexus私服
 
 ## 1. 安装
