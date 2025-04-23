@@ -200,5 +200,13 @@ git reset --hard head~1    # 撤销commit，撤销add，工作区代码改动丢
 
 # 修订版本
 - 修复漏洞
+
+# SNAPSHOT
+- 快照版本
+- 每个模块进行的临时版本(测试版本)
+
+# RELEASE 
+- 发布版本
+- 稳定版本
 ```
 
