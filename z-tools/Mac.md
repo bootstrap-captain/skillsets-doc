@@ -1,3 +1,44 @@
+# Shell
+
+## 查看
+
+```bash
+# macOS 允许的 Shell 必须位于 /etc/shells 文件中
+cd /
+cat /etc/shells
+
+# List of acceptable shells for chpass(1).
+# Ftpd will not allow users to connect who are not using
+# one of these shells.
+
+/bin/bash
+/bin/csh
+/bin/dash
+/bin/ksh
+/bin/sh
+/bin/tcsh
+/bin/zsh
+```
+
+```bash
+# 查看当前shell:  MacOS默认使用的是zsh
+echo $SHELL
+
+/bin/zsh                       
+```
+
+## 切换
+
+```bash
+# 切换到bash, 输入密码，重新打开teriminal
+chsh -s /bin/bash
+
+# 切换到zsh(默认)
+chsh -s /bin/zsh
+```
+
+
+
 # Typora
 
 - [官网链接](https://typora.io/)
