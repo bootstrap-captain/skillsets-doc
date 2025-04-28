@@ -20,59 +20,6 @@ http://39.105.210.163:8080/
 
 
 
-# JDK17/8
-
-## 1. 下载
-
-- [官网下载](https://www.oracle.com/java/technologies/downloads/#java17)
-
-![image-20220901003504136](https://erick-typora-image.oss-cn-shanghai.aliyuncs.com/img/image-20220901003504136.png)
-
-## 2. 安装
-
-```bash
-# 在阿里云服务器上
-cd usr/local
-mkdir java17
-
-#  使用mac的sftp上传文件到
-put /Users/shuzhan/Desktop/jdk-17_linux-x64_bin.tar.gz /usr/local/java17
-
-# 解压文件
-tar -zxvf jdk-17_linux-x64_bin.tar.gz 
-```
-
-## 3. 配置环境变量
-
-```bash
-vim /etc/profile
-
-# 找到export PATH USER LOGNAME MAIL HOSTNAME HISTSIZE HISTCONTROL，在下面写上：
-
-#set java environment
-export JAVA_HOME=/usr/local/java17/jdk-17.0.4.1
-export CLASSPATH=.:$JAVA_HOME/lib
-export PATH=$PATH:$JAVA_HOME/bin:$JAVA_HOME/jre/bin
-```
-
-## 4. 刷新环境变量
-
-```bash
-# 刷新环境变量
-source /etc/profile
-
-java -version
-
-java version "17.0.4.1" 2022-08-18 LTS
-Java(TM) SE Runtime Environment (build 17.0.4.1+1-LTS-2)
-Java HotSpot(TM) 64-Bit Server VM (build 17.0.4.1+1-LTS-2, mixed mode, sharing)
-
-# 如果切换了java 版本
-- 需要重新打开terminal，不然可能出现查看java -version可能没改过来
-```
-
-
-
 # 安装Kafka
 
 - 集群版本：1台zookeeper，3台kafka组成集群
