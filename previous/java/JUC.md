@@ -287,8 +287,6 @@ public class Demo02 {
 }
 ```
 
-#### 
-
 # AQS
 
 - AbstractQueuedSynchronizer：抽象类，阻塞式锁和相关的同步器工具的框架
